@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   Search,
@@ -33,12 +33,32 @@ export default function Navbar() {
     userCapabilities,
     logout,
     unreadNotifCount,
+    unreadMessagesCount,
     openModal,
     showToast
   } = useApp();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close profile dropdown on click outside
+  useEffect(() => {
+    if (!profileDropdownOpen) return;
+    const handler = (e) => {
+      if (!e.target.closest('.profile-dropdown-zone')) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [profileDropdownOpen]);
 
   const isTechnician = Boolean(
     userCapabilities?.includes('TECHNICIAN') ||
@@ -62,26 +82,100 @@ export default function Navbar() {
     await logout();
   };
 
+  const navLinkStyle = (page) => ({
+    padding: '8px 16px',
+    borderRadius: '10px',
+    fontWeight: currentPage === page ? 700 : 600,
+    color: currentPage === page ? '#60A5FA' : '#CBD5E1',
+    background: currentPage === page ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+    fontSize: '14px',
+    transition: 'all 0.18s ease',
+    letterSpacing: '-0.01em'
+  });
+
+  const iconBtnStyle = {
+    width: '38px',
+    height: '38px',
+    borderRadius: '10px',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#CBD5E1',
+    background: 'rgba(255, 255, 255, 0.04)',
+    position: 'relative',
+    cursor: 'pointer',
+    transition: 'all 0.18s ease'
+  };
+
+  const dropdownItemStyle = {
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '9px 14px',
+    borderRadius: '8px',
+    fontSize: '13px',
+    color: '#CBD5E1',
+    fontWeight: 500,
+    textAlign: 'left',
+    transition: 'all 0.15s ease'
+  };
+
+  const notifBadge = (count, color = '#EF4444') => count > 0 && (
+    <span style={{
+      position: 'absolute',
+      top: '-3px',
+      right: '-3px',
+      background: color,
+      color: '#FFFFFF',
+      borderRadius: '999px',
+      width: '17px',
+      height: '17px',
+      fontSize: '10px',
+      fontWeight: 700,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      border: '2px solid #0A0F24',
+      boxShadow: `0 0 8px ${color}40`
+    }}>
+      {count}
+    </span>
+  );
+
   return (
     <>
-      {/* Primary Clean Unified Navbar (~76px height) */}
+      {/* Premium Floating Dark Navbar */}
       <header style={{
-        position: 'sticky',
-        top: 0,
+        position: 'fixed',
+        top: scrolled ? '0px' : '12px',
+        left: scrolled ? '0px' : '16px',
+        right: scrolled ? '0px' : '16px',
         zIndex: 900,
-        backgroundColor: '#FFFFFF',
-        borderBottom: '1px solid #E2E8F0',
-        boxShadow: '0 1px 4px 0 rgba(11, 21, 51, 0.03)',
-        transition: 'all 0.2s ease'
+        background: scrolled
+          ? 'rgba(10, 15, 36, 0.92)'
+          : 'rgba(14, 19, 48, 0.65)',
+        backdropFilter: 'blur(24px) saturate(1.4)',
+        WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
+        borderRadius: scrolled ? '0px' : '16px',
+        border: scrolled
+          ? 'none'
+          : '1px solid rgba(255, 255, 255, 0.06)',
+        borderBottom: scrolled ? '1px solid rgba(255, 255, 255, 0.06)' : undefined,
+        boxShadow: scrolled
+          ? '0 4px 24px rgba(0, 0, 0, 0.4)'
+          : '0 8px 32px -4px rgba(0, 0, 0, 0.3)',
+        transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
       }}>
         <div className="container" style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          height: '76px',
+          height: '68px',
           gap: '20px'
         }}>
-          {/* LEFT: Brand Container (Logo + Name + Tagline) */}
+          {/* LEFT: Brand */}
           <div
             onClick={() => navigateTo('home')}
             style={{
@@ -95,26 +189,27 @@ export default function Navbar() {
           >
             {/* Logo Icon */}
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '38px',
+              height: '38px',
               borderRadius: '10px',
-              background: '#0B1533',
+              background: 'linear-gradient(135deg, #0E1330 0%, #151B3B 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(11, 21, 51, 0.15)',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              boxShadow: '0 0 20px rgba(59, 130, 246, 0.1)',
               flexShrink: 0
             }}>
-              <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
+              <svg width="26" height="26" viewBox="0 0 48 48" fill="none">
                 <path
                   d="M14 24 C14 18, 20 14, 24 18 C28 22, 34 26, 34 20 C34 16, 30 14, 28 14"
-                  stroke="#1677FF"
+                  stroke="#3B82F6"
                   strokeWidth="4.2"
                   strokeLinecap="round"
                 />
                 <path
                   d="M34 24 C34 30, 28 34, 24 30 C20 26, 14 22, 14 28 C14 32, 18 34, 20 34"
-                  stroke="#FF7A00"
+                  stroke="#F97316"
                   strokeWidth="4.2"
                   strokeLinecap="round"
                 />
@@ -122,37 +217,37 @@ export default function Navbar() {
               </svg>
             </div>
 
-            {/* Brand Title & Tagline */}
+            {/* Brand Title */}
             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', lineHeight: 1.15 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', lineHeight: 1.15 }}>
                 <span style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: '21px',
+                  fontSize: '20px',
                   fontWeight: 800,
                   letterSpacing: '-0.03em',
-                  color: '#0B1533'
+                  color: '#F8FAFC'
                 }}>
-                  Renti<span style={{ color: '#1677FF' }}>Pair</span>
+                  Renti<span style={{ color: '#3B82F6' }}>Pair</span>
                 </span>
                 <span style={{
-                  background: '#EEF4FF',
-                  color: '#1677FF',
-                  fontSize: '9.5px',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  color: '#60A5FA',
+                  fontSize: '9px',
                   fontWeight: 700,
-                  padding: '1.5px 5px',
+                  padding: '2px 6px',
                   borderRadius: '4px',
-                  letterSpacing: '0.04em',
+                  letterSpacing: '0.06em',
                   textTransform: 'uppercase',
-                  border: '1px solid rgba(22, 119, 255, 0.2)'
+                  border: '1px solid rgba(59, 130, 246, 0.2)'
                 }}>
                   BETA
                 </span>
               </div>
               <div style={{
-                fontSize: '11px',
+                fontSize: '10.5px',
                 color: '#64748B',
                 fontWeight: 500,
-                letterSpacing: '0.01em',
+                letterSpacing: '0.02em',
                 lineHeight: 1.2,
                 marginTop: '2px',
                 whiteSpace: 'nowrap'
@@ -162,53 +257,29 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* CENTER: Main Navigation Links (Desktop) */}
+          {/* CENTER: Navigation Links (Desktop) */}
           <div style={{
             display: 'none',
             alignItems: 'center',
-            gap: '6px'
+            gap: '4px'
           }} className="desktop-nav-center">
             <button
               onClick={() => navigateTo('rent')}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
-                fontWeight: currentPage === 'rent' ? 700 : 600,
-                color: currentPage === 'rent' ? '#1677FF' : '#334155',
-                background: currentPage === 'rent' ? '#EEF4FF' : 'transparent',
-                fontSize: '14px',
-                transition: 'all 0.16s ease'
-              }}
+              style={navLinkStyle('rent')}
             >
               Rent Equipment
             </button>
 
             <button
               onClick={() => navigateTo('repairs')}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
-                fontWeight: currentPage === 'repairs' ? 700 : 600,
-                color: currentPage === 'repairs' ? '#1677FF' : '#334155',
-                background: currentPage === 'repairs' ? '#EEF4FF' : 'transparent',
-                fontSize: '14px',
-                transition: 'all 0.16s ease'
-              }}
+              style={navLinkStyle('repairs')}
             >
               Repair Services
             </button>
 
             <button
               onClick={() => navigateTo('dashboard')}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
-                fontWeight: currentPage === 'dashboard' ? 700 : 600,
-                color: currentPage === 'dashboard' ? '#1677FF' : '#334155',
-                background: currentPage === 'dashboard' ? '#EEF4FF' : 'transparent',
-                fontSize: '14px',
-                transition: 'all 0.16s ease'
-              }}
+              style={navLinkStyle('dashboard')}
             >
               Dashboard
             </button>
@@ -218,14 +289,15 @@ export default function Navbar() {
                 onClick={() => navigateTo('admin')}
                 style={{
                   padding: '8px 14px',
-                  borderRadius: '8px',
+                  borderRadius: '10px',
                   fontWeight: 700,
-                  color: '#DC2626',
-                  background: '#FEF2F2',
-                  fontSize: '13.5px',
+                  color: '#F87171',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  fontSize: '13px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '5px'
+                  gap: '5px',
+                  border: '1px solid rgba(239, 68, 68, 0.15)'
                 }}
               >
                 <ShieldAlert size={14} />
@@ -246,7 +318,7 @@ export default function Navbar() {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '10px'
+            gap: '8px'
           }}>
             {/* Quick Search Button */}
             <button
@@ -255,27 +327,29 @@ export default function Navbar() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '7px 12px',
+                padding: '7px 14px',
                 borderRadius: '999px',
-                border: '1.5px solid #E2E8F0',
-                background: '#F8FAFC',
-                color: '#64748B',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: 'rgba(255, 255, 255, 0.04)',
+                color: '#94A3B8',
                 fontSize: '13px',
-                height: '38px',
-                transition: 'all 0.15s ease'
+                height: '36px',
+                transition: 'all 0.18s ease',
+                backdropFilter: 'blur(8px)'
               }}
               aria-label="Global Search"
             >
-              <Search size={15} />
+              <Search size={14} />
               <span style={{ display: 'none' }} className="nav-search-label">Search</span>
               <kbd style={{
-                background: '#E2E8F0',
-                color: '#475569',
-                padding: '1px 5px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#64748B',
+                padding: '1px 6px',
                 borderRadius: '4px',
-                fontSize: '10.5px',
+                fontSize: '10px',
                 fontWeight: 700,
-                fontFamily: 'monospace'
+                fontFamily: 'monospace',
+                border: '1px solid rgba(255, 255, 255, 0.06)'
               }}>
                 ⌘K
               </kbd>
@@ -292,79 +366,62 @@ export default function Navbar() {
             {/* Authenticated State */}
             {currentUser ? (
               <>
+                {/* Messages */}
+                <button
+                  onClick={() => openModal('chat')}
+                  style={iconBtnStyle}
+                  aria-label="In-App Messages"
+                  title="In-App Messages"
+                >
+                  <MessageSquare size={16} />
+                  {notifBadge(unreadMessagesCount, '#3B82F6')}
+                </button>
+
                 {/* Notifications Bell */}
                 <button
                   onClick={() => openModal('notificationDrawer')}
-                  style={{
-                    width: '38px',
-                    height: '38px',
-                    borderRadius: '8px',
-                    border: '1px solid #E2E8F0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#334155',
-                    background: '#FFFFFF',
-                    position: 'relative'
-                  }}
+                  style={iconBtnStyle}
                   aria-label="Notifications"
                 >
-                  <Bell size={17} />
-                  {unreadNotifCount > 0 && (
-                    <span style={{
-                      position: 'absolute',
-                      top: '-2px',
-                      right: '-2px',
-                      background: '#EF4444',
-                      color: '#FFFFFF',
-                      borderRadius: '999px',
-                      width: '16px',
-                      height: '16px',
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: '1.5px solid #FFFFFF'
-                    }}>
-                      {unreadNotifCount}
-                    </span>
-                  )}
+                  <Bell size={16} />
+                  {notifBadge(unreadNotifCount)}
                 </button>
 
-                {/* List Equipment (Secondary Button) */}
+                {/* List Equipment */}
                 <button
                   onClick={() => openModal('listEquipment')}
                   className="btn btn-outline btn-sm"
-                  style={{ display: 'none' }}
+                  style={{ display: 'none', height: '36px', borderRadius: '10px' }}
                   id="nav-list-btn"
                 >
                   <PlusCircle size={14} />
                   <span>List Equipment</span>
                 </button>
 
-                {/* User-Aware: Technician Dashboard OR Become Tech */}
+                {/* Technician Dashboard OR Become Tech */}
                 {isTechnician ? (
                   <button
                     onClick={() => navigateTo('dashboard', { tab: 'technician' })}
                     className="btn btn-sm"
                     style={{
                       display: 'none',
-                      background: '#FFF5EB',
-                      color: '#EA580C',
-                      border: '1.5px solid #FDBA74',
-                      fontWeight: 700
+                      background: 'rgba(249, 115, 22, 0.12)',
+                      color: '#FB923C',
+                      border: '1px solid rgba(249, 115, 22, 0.2)',
+                      fontWeight: 700,
+                      height: '36px',
+                      borderRadius: '10px'
                     }}
                     id="nav-tech-btn"
                   >
-                    <Wrench size={14} color="#EA580C" />
-                    <span>Technician Dashboard</span>
+                    <Wrench size={14} color="#FB923C" />
+                    <span>Tech Dashboard</span>
                   </button>
                 ) : (
                   <button
                     onClick={() => openModal('becomeTechnician')}
                     className="btn btn-orange btn-sm"
-                    style={{ display: 'none' }}
+                    style={{ display: 'none', height: '36px', borderRadius: '10px' }}
                     id="nav-tech-btn"
                   >
                     <Wrench size={14} />
@@ -380,8 +437,8 @@ export default function Navbar() {
                   }
                 `}</style>
 
-                {/* User Profile Avatar with Menu */}
-                <div style={{ position: 'relative' }}>
+                {/* User Profile Avatar */}
+                <div style={{ position: 'relative' }} className="profile-dropdown-zone">
                   <button
                     onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                     style={{
@@ -390,9 +447,10 @@ export default function Navbar() {
                       gap: '7px',
                       padding: '3px 8px 3px 3px',
                       borderRadius: '999px',
-                      border: '1.5px solid #E2E8F0',
-                      background: '#FFFFFF',
-                      cursor: 'pointer'
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      cursor: 'pointer',
+                      transition: 'all 0.18s ease'
                     }}
                     aria-label="User Profile Menu"
                   >
@@ -401,25 +459,25 @@ export default function Navbar() {
                         src={currentUser.avatar}
                         alt={currentUser.name}
                         style={{
-                          width: '32px',
-                          height: '32px',
+                          width: '30px',
+                          height: '30px',
                           borderRadius: '50%',
-                          objectFit: 'cover'
+                          objectFit: 'cover',
+                          border: '1.5px solid rgba(59, 130, 246, 0.3)'
                         }}
                       />
                     ) : (
                       <div style={{
-                        width: '32px',
-                        height: '32px',
+                        width: '30px',
+                        height: '30px',
                         borderRadius: '50%',
-                        background: '#0B1533',
+                        background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
                         color: '#FFFFFF',
                         fontWeight: 700,
-                        fontSize: '12px',
+                        fontSize: '11px',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        border: '1.5px solid #1677FF'
+                        justifyContent: 'center'
                       }}>
                         {getInitials(currentUser.name)}
                       </div>
@@ -428,7 +486,7 @@ export default function Navbar() {
                     <span style={{
                       fontSize: '12.5px',
                       fontWeight: 600,
-                      color: '#0B1533',
+                      color: '#E2E8F0',
                       display: 'none'
                     }} className="nav-profile-name">
                       {currentUser.name ? currentUser.name.split(' ')[0] : 'Account'}
@@ -444,41 +502,47 @@ export default function Navbar() {
                     }
                   `}</style>
 
-                  {/* Profile Dropdown Menu */}
+                  {/* Profile Dropdown */}
                   {profileDropdownOpen && (
                     <div style={{
                       position: 'absolute',
                       right: 0,
                       top: '100%',
-                      marginTop: '8px',
-                      background: '#FFFFFF',
-                      color: '#0B1533',
-                      borderRadius: '14px',
-                      boxShadow: '0 12px 32px rgba(11, 21, 51, 0.15)',
-                      border: '1px solid #E2E8F0',
-                      width: '260px',
+                      marginTop: '10px',
+                      background: '#0E1330',
+                      color: '#E2E8F0',
+                      borderRadius: '16px',
+                      boxShadow: '0 16px 48px rgba(0, 0, 0, 0.5)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      width: '270px',
                       padding: '6px',
-                      zIndex: 1000
+                      zIndex: 1000,
+                      animation: 'modalFadeIn 0.2s ease forwards'
                     }}>
                       {/* User Header */}
-                      <div style={{ padding: '10px 12px', borderBottom: '1px solid #F1F5F9' }}>
-                        <div style={{ fontWeight: 800, fontSize: '14px', color: '#0B1533' }}>
+                      <div style={{
+                        padding: '12px 14px',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                        marginBottom: '4px'
+                      }}>
+                        <div style={{ fontWeight: 800, fontSize: '14px', color: '#F8FAFC' }}>
                           {currentUser.name}
                         </div>
-                        <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '1px' }}>
+                        <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '2px' }}>
                           {currentUser.email}
                         </div>
                         <div style={{
-                          marginTop: '6px',
+                          marginTop: '8px',
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '4px',
                           fontSize: '11px',
                           fontWeight: 600,
-                          color: '#059669',
-                          background: '#ECFDF5',
-                          padding: '2px 7px',
-                          borderRadius: '4px'
+                          color: '#34D399',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          border: '1px solid rgba(16, 185, 129, 0.15)'
                         }}>
                           <CheckCircle2 size={11} />
                           <span>{currentUser.city || 'Verified User'}</span>
@@ -486,178 +550,72 @@ export default function Navbar() {
                       </div>
 
                       {/* Navigation Links */}
-                      <div style={{ padding: '6px 0' }}>
-                        <button
-                          onClick={() => handleProfileMenuClick('profile')}
-                          style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            color: '#334155',
-                            fontWeight: 500,
-                            textAlign: 'left'
-                          }}
-                        >
+                      <div style={{ padding: '4px 0' }}>
+                        <button onClick={() => handleProfileMenuClick('profile')} style={dropdownItemStyle}>
                           <User size={15} color="#64748B" />
-                          <span>Profile &amp; KYC</span>
+                          <span>Profile & KYC</span>
                         </button>
 
-                        <button
-                          onClick={() => handleProfileMenuClick('rentals')}
-                          style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            color: '#334155',
-                            fontWeight: 500,
-                            textAlign: 'left'
-                          }}
-                        >
+                        <button onClick={() => handleProfileMenuClick('rentals')} style={dropdownItemStyle}>
                           <Box size={15} color="#64748B" />
                           <span>My Rentals</span>
                         </button>
 
-                        <button
-                          onClick={() => handleProfileMenuClick('equipment')}
-                          style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            color: '#334155',
-                            fontWeight: 500,
-                            textAlign: 'left'
-                          }}
-                        >
+                        <button onClick={() => handleProfileMenuClick('equipment')} style={dropdownItemStyle}>
                           <Layers size={15} color="#64748B" />
                           <span>My Equipment</span>
                         </button>
 
-                        <button
-                          onClick={() => handleProfileMenuClick('repairs')}
-                          style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            color: '#334155',
-                            fontWeight: 500,
-                            textAlign: 'left'
-                          }}
-                        >
+                        <button onClick={() => handleProfileMenuClick('repairs')} style={dropdownItemStyle}>
                           <Wrench size={15} color="#64748B" />
                           <span>Repair Requests</span>
                         </button>
 
-                        {/* Technician Profile Option (Only if started/completed technician onboarding) */}
                         {isTechnician && (
                           <button
                             onClick={() => handleProfileMenuClick('technician')}
                             style={{
-                              width: '100%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '10px',
-                              padding: '8px 12px',
-                              borderRadius: '6px',
-                              fontSize: '13px',
-                              color: '#EA580C',
-                              background: '#FFF7ED',
+                              ...dropdownItemStyle,
+                              color: '#FB923C',
+                              background: 'rgba(249, 115, 22, 0.08)',
                               fontWeight: 700,
-                              textAlign: 'left'
+                              border: '1px solid rgba(249, 115, 22, 0.12)'
                             }}
                           >
-                            <Wrench size={15} color="#EA580C" />
+                            <Wrench size={15} color="#FB923C" />
                             <span>Technician Profile</span>
                           </button>
                         )}
 
-                        <button
-                          onClick={() => handleProfileMenuClick('messages')}
-                          style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            color: '#334155',
-                            fontWeight: 500,
-                            textAlign: 'left'
-                          }}
-                        >
+                        <button onClick={() => handleProfileMenuClick('messages')} style={dropdownItemStyle}>
                           <MessageSquare size={15} color="#64748B" />
                           <span>Messages</span>
                         </button>
 
-                        <button
-                          onClick={() => handleProfileMenuClick('payments')}
-                          style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            color: '#334155',
-                            fontWeight: 500,
-                            textAlign: 'left'
-                          }}
-                        >
+                        <button onClick={() => handleProfileMenuClick('payments')} style={dropdownItemStyle}>
                           <CreditCard size={15} color="#64748B" />
-                          <span>Payments &amp; Escrow</span>
+                          <span>Payments & Escrow</span>
                         </button>
 
-                        <button
-                          onClick={() => handleProfileMenuClick('settings')}
-                          style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            color: '#334155',
-                            fontWeight: 500,
-                            textAlign: 'left'
-                          }}
-                        >
+                        <button onClick={() => handleProfileMenuClick('settings')} style={dropdownItemStyle}>
                           <Settings size={15} color="#64748B" />
                           <span>Settings</span>
                         </button>
                       </div>
 
-                      {/* Footer: Schema Doc & Logout */}
-                      <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '6px', marginTop: '2px' }}>
+                      {/* Footer */}
+                      <div style={{
+                        borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                        paddingTop: '6px',
+                        marginTop: '4px'
+                      }}>
                         <button
                           onClick={() => { setProfileDropdownOpen(false); openModal('schemaDoc'); }}
                           style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '7px 12px',
-                            borderRadius: '6px',
+                            ...dropdownItemStyle,
                             color: '#64748B',
                             fontSize: '12px',
-                            textAlign: 'left'
+                            gap: '8px'
                           }}
                         >
                           <Database size={13} />
@@ -667,20 +625,13 @@ export default function Navbar() {
                         <button
                           onClick={handleLogout}
                           style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '7px 12px',
-                            borderRadius: '6px',
-                            color: '#DC2626',
-                            fontSize: '13px',
+                            ...dropdownItemStyle,
+                            color: '#F87171',
                             fontWeight: 600,
-                            textAlign: 'left',
                             marginTop: '2px'
                           }}
                         >
-                          <LogOut size={14} color="#DC2626" />
+                          <LogOut size={14} color="#F87171" />
                           <span>Log Out</span>
                         </button>
                       </div>
@@ -695,9 +646,9 @@ export default function Navbar() {
                   onClick={() => navigateTo('login')}
                   className="btn btn-outline btn-sm"
                   style={{
-                    height: '38px',
-                    borderRadius: '8px',
-                    fontSize: '13.5px',
+                    height: '36px',
+                    borderRadius: '10px',
+                    fontSize: '13px',
                     fontWeight: 600
                   }}
                 >
@@ -709,9 +660,9 @@ export default function Navbar() {
                   onClick={() => navigateTo('signup')}
                   className="btn btn-primary btn-sm"
                   style={{
-                    height: '38px',
-                    borderRadius: '8px',
-                    fontSize: '13.5px',
+                    height: '36px',
+                    borderRadius: '10px',
+                    fontSize: '13px',
                     fontWeight: 700
                   }}
                 >
@@ -721,18 +672,12 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Mobile Hamburger Button */}
+            {/* Mobile Hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '38px',
-                height: '38px',
-                borderRadius: '8px',
-                border: '1px solid #E2E8F0',
-                color: '#334155'
+                ...iconBtnStyle,
+                color: '#E2E8F0'
               }}
               className="mobile-hamburger-btn"
               aria-label="Toggle navigation menu"
@@ -754,11 +699,12 @@ export default function Navbar() {
         {mobileMenuOpen && (
           <div style={{
             padding: '16px 20px',
-            background: '#FFFFFF',
-            borderTop: '1px solid #E2E8F0',
+            background: 'rgba(10, 15, 36, 0.98)',
+            borderTop: '1px solid rgba(255, 255, 255, 0.06)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '10px'
+            gap: '8px',
+            borderRadius: '0 0 16px 16px'
           }}>
             <button
               onClick={() => { navigateTo('rent'); setMobileMenuOpen(false); }}
@@ -766,15 +712,16 @@ export default function Navbar() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                background: currentPage === 'rent' ? '#EFF6FF' : '#F8FAFC',
-                color: currentPage === 'rent' ? '#1677FF' : '#0B1533',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                background: currentPage === 'rent' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                color: currentPage === 'rent' ? '#60A5FA' : '#E2E8F0',
                 fontWeight: 600,
-                fontSize: '14px'
+                fontSize: '14px',
+                border: '1px solid ' + (currentPage === 'rent' ? 'rgba(59, 130, 246, 0.15)' : 'transparent')
               }}
             >
-              <Box size={18} color="#1677FF" />
+              <Box size={18} color="#3B82F6" />
               <span>Rent Equipment</span>
             </button>
 
@@ -784,15 +731,16 @@ export default function Navbar() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                background: currentPage === 'repairs' ? '#FFF5EB' : '#F8FAFC',
-                color: currentPage === 'repairs' ? '#E66A00' : '#0B1533',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                background: currentPage === 'repairs' ? 'rgba(249, 115, 22, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                color: currentPage === 'repairs' ? '#FB923C' : '#E2E8F0',
                 fontWeight: 600,
-                fontSize: '14px'
+                fontSize: '14px',
+                border: '1px solid ' + (currentPage === 'repairs' ? 'rgba(249, 115, 22, 0.15)' : 'transparent')
               }}
             >
-              <Wrench size={18} color="#FF7A00" />
+              <Wrench size={18} color="#F97316" />
               <span>Repair Services</span>
             </button>
 
@@ -802,12 +750,13 @@ export default function Navbar() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                background: currentPage === 'dashboard' ? '#EFF6FF' : '#F8FAFC',
-                color: currentPage === 'dashboard' ? '#1677FF' : '#0B1533',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                background: currentPage === 'dashboard' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                color: currentPage === 'dashboard' ? '#60A5FA' : '#E2E8F0',
                 fontWeight: 600,
-                fontSize: '14px'
+                fontSize: '14px',
+                border: '1px solid ' + (currentPage === 'dashboard' ? 'rgba(59, 130, 246, 0.15)' : 'transparent')
               }}
             >
               <LayoutDashboard size={18} color="#64748B" />
@@ -815,11 +764,11 @@ export default function Navbar() {
             </button>
 
             {currentUser ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '6px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
                 <button
                   onClick={() => { openModal('listEquipment'); setMobileMenuOpen(false); }}
                   className="btn btn-outline"
-                  style={{ fontSize: '13px', height: '38px' }}
+                  style={{ fontSize: '13px', height: '40px', borderRadius: '12px' }}
                 >
                   <PlusCircle size={15} /> List Gear
                 </button>
@@ -833,24 +782,24 @@ export default function Navbar() {
                     setMobileMenuOpen(false);
                   }}
                   className="btn btn-orange"
-                  style={{ fontSize: '13px', height: '38px' }}
+                  style={{ fontSize: '13px', height: '40px', borderRadius: '12px' }}
                 >
                   <Wrench size={15} /> {isTechnician ? 'Tech Jobs' : 'Become Tech'}
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '6px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
                 <button
                   onClick={() => { navigateTo('login'); setMobileMenuOpen(false); }}
                   className="btn btn-outline"
-                  style={{ fontSize: '13px', height: '38px' }}
+                  style={{ fontSize: '13px', height: '40px', borderRadius: '12px' }}
                 >
                   <LogIn size={15} /> Log In
                 </button>
                 <button
                   onClick={() => { navigateTo('signup'); setMobileMenuOpen(false); }}
                   className="btn btn-primary"
-                  style={{ fontSize: '13px', height: '38px' }}
+                  style={{ fontSize: '13px', height: '40px', borderRadius: '12px' }}
                 >
                   <UserPlus size={15} /> Sign Up
                 </button>
@@ -859,6 +808,9 @@ export default function Navbar() {
           </div>
         )}
       </header>
+
+      {/* Spacer for fixed navbar */}
+      <div style={{ height: '92px' }} />
 
       {/* Mobile Bottom Navigation Bar */}
       <div className="mobile-bottom-nav">

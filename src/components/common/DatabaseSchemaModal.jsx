@@ -16,7 +16,14 @@ export default function DatabaseSchemaModal() {
       <div
         className="modal-content extra-wide"
         onClick={e => e.stopPropagation()}
-        style={{ padding: 0, overflow: 'hidden' }}
+        style={{
+          padding: 0,
+          overflow: 'hidden',
+          background: 'linear-gradient(180deg, #0B1028 0%, #060919 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(59, 130, 246, 0.15)',
+          borderRadius: '20px'
+        }}
       >
         {/* Header */}
         <div style={{
@@ -26,7 +33,7 @@ export default function DatabaseSchemaModal() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid rgba(255,255,255,0.1)'
+          borderBottom: '1px solid rgba(255,255,255,0.08)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
@@ -42,7 +49,7 @@ export default function DatabaseSchemaModal() {
               <Database size={22} color="#60A5FA" />
             </div>
             <div>
-              <div style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em' }}>
+              <div style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em', color: '#FFFFFF' }}>
                 RentiPair Relational Database Architecture
               </div>
               <div style={{ fontSize: '12.5px', color: '#94A3B8' }}>
@@ -53,9 +60,22 @@ export default function DatabaseSchemaModal() {
 
           <button
             onClick={() => closeModal('schemaDoc')}
-            style={{ color: '#E2E8F0', padding: '6px' }}
+            style={{
+              color: '#94A3B8',
+              background: 'rgba(255, 255, 255, 0.06)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              padding: '6px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.15s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = '#FFFFFF'}
+            onMouseLeave={e => e.currentTarget.style.color = '#94A3B8'}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
@@ -63,12 +83,12 @@ export default function DatabaseSchemaModal() {
         <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', minHeight: '480px', maxHeight: '70vh' }}>
           {/* Table List Sidebar */}
           <div style={{
-            background: '#F8FAFC',
-            borderRight: '1px solid #E2E8F0',
+            background: 'rgba(11, 16, 40, 0.85)',
+            borderRight: '1px solid rgba(255, 255, 255, 0.08)',
             padding: '16px 12px',
             overflowY: 'auto'
           }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', marginBottom: '8px', paddingLeft: '8px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: '#38BDF8', textTransform: 'uppercase', marginBottom: '8px', paddingLeft: '8px', letterSpacing: '0.04em' }}>
               Relational Tables ({DATABASE_SCHEMA_DOCUMENTATION.length})
             </div>
             {DATABASE_SCHEMA_DOCUMENTATION.map(item => (
@@ -82,23 +102,26 @@ export default function DatabaseSchemaModal() {
                   borderRadius: '8px',
                   fontSize: '13.5px',
                   fontWeight: selectedTable === item.table ? 700 : 500,
-                  background: selectedTable === item.table ? '#0066FF' : 'transparent',
-                  color: selectedTable === item.table ? '#FFFFFF' : '#334155',
+                  background: selectedTable === item.table ? 'linear-gradient(90deg, #2563EB 0%, #1D4ED8 100%)' : 'transparent',
+                  color: selectedTable === item.table ? '#FFFFFF' : '#94A3B8',
+                  border: selectedTable === item.table ? '1px solid rgba(96, 165, 250, 0.4)' : '1px solid transparent',
+                  boxShadow: selectedTable === item.table ? '0 0 12px rgba(37, 99, 235, 0.3)' : 'none',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   marginBottom: '3px',
+                  cursor: 'pointer',
                   transition: 'all 0.15s'
                 }}
               >
                 <span>{item.table}</span>
                 <span style={{
                   fontSize: '11px',
-                  opacity: 0.8,
-                  background: selectedTable === item.table ? 'rgba(255,255,255,0.2)' : '#E2E8F0',
+                  opacity: 0.85,
+                  background: selectedTable === item.table ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.06)',
                   padding: '1px 6px',
                   borderRadius: '4px',
-                  color: selectedTable === item.table ? '#FFFFFF' : '#475569'
+                  color: selectedTable === item.table ? '#FFFFFF' : '#64748B'
                 }}>
                   {item.columns.length} cols
                 </span>
@@ -107,41 +130,42 @@ export default function DatabaseSchemaModal() {
           </div>
 
           {/* Table Details */}
-          <div style={{ padding: '24px', overflowY: 'auto', background: '#FFFFFF' }}>
+          <div style={{ padding: '24px', overflowY: 'auto', background: 'rgba(7, 10, 26, 0.7)' }}>
             {currentTableData && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                   <div>
-                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Server size={20} color="var(--color-primary)" />
+                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Server size={20} color="#38BDF8" />
                       TABLE {currentTableData.table}
                     </h3>
-                    <p style={{ fontSize: '13.5px', color: '#64748B', marginTop: '4px' }}>
+                    <p style={{ fontSize: '13.5px', color: '#94A3B8', marginTop: '4px' }}>
                       {currentTableData.description}
                     </p>
                   </div>
                   <span style={{
                     fontSize: '12px',
                     padding: '4px 10px',
-                    background: '#ECFDF5',
-                    color: '#047857',
+                    background: 'rgba(16, 185, 129, 0.12)',
+                    color: '#34D399',
                     borderRadius: '6px',
                     fontWeight: 600,
-                    border: '1px solid #A7F3D0'
+                    border: '1px solid rgba(52, 211, 153, 0.3)'
                   }}>
                     Normal Form: 3NF Compliant
                   </span>
                 </div>
 
                 <div style={{
-                  border: '1px solid #E2E8F0',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: '12px',
                   overflow: 'hidden',
-                  marginTop: '16px'
+                  marginTop: '16px',
+                  background: 'rgba(14, 20, 48, 0.6)'
                 }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
                     <thead>
-                      <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#475569', fontWeight: 700 }}>
+                      <tr style={{ background: 'rgba(255, 255, 255, 0.04)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: '#94A3B8', fontWeight: 700 }}>
                         <th style={{ padding: '10px 14px' }}>Column</th>
                         <th style={{ padding: '10px 14px' }}>Type & Constraints</th>
                         <th style={{ padding: '10px 14px' }}>Description & Relational Note</th>
@@ -152,18 +176,18 @@ export default function DatabaseSchemaModal() {
                         <tr
                           key={idx}
                           style={{
-                            borderBottom: idx === currentTableData.columns.length - 1 ? 'none' : '1px solid #F1F5F9',
-                            background: idx % 2 === 0 ? '#FFFFFF' : '#FAFAFA'
+                            borderBottom: idx === currentTableData.columns.length - 1 ? 'none' : '1px solid rgba(255, 255, 255, 0.05)',
+                            background: idx % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.02)'
                           }}
                         >
-                          <td style={{ padding: '10px 14px', fontWeight: 600, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <td style={{ padding: '10px 14px', fontWeight: 600, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             {col.name === 'id' ? <Key size={13} color="#F59E0B" /> : <div style={{ width: 13 }} />}
                             <code>{col.name}</code>
                           </td>
-                          <td style={{ padding: '10px 14px', color: '#0066FF', fontFamily: 'monospace', fontSize: '12px' }}>
+                          <td style={{ padding: '10px 14px', color: '#60A5FA', fontFamily: 'monospace', fontSize: '12px' }}>
                             {col.type}
                           </td>
-                          <td style={{ padding: '10px 14px', color: '#64748B' }}>
+                          <td style={{ padding: '10px 14px', color: '#94A3B8' }}>
                             {col.note}
                           </td>
                         </tr>
@@ -177,15 +201,15 @@ export default function DatabaseSchemaModal() {
                   marginTop: '20px',
                   padding: '14px 18px',
                   borderRadius: '12px',
-                  background: '#F0F9FF',
-                  border: '1px solid #BAE6FD',
+                  background: 'rgba(14, 165, 233, 0.08)',
+                  border: '1px solid rgba(14, 165, 233, 0.25)',
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '12px'
                 }}>
-                  <Shield size={20} color="#0284C7" style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div style={{ fontSize: '12.5px', color: '#0369A1' }}>
-                    <strong>Security Rule Enforced:</strong> Sensitive fields like <code>encrypted_file_path</code>, Aadhaar/Govt ID documents and PAN details are encrypted at rest with AES-256-GCM. Public technician profiles only display masked document hashes (e.g. <code>****-9204</code>) and never render raw documents to client applications.
+                  <Shield size={20} color="#38BDF8" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div style={{ fontSize: '12.5px', color: '#BAE6FD', lineHeight: 1.5 }}>
+                    <strong style={{ color: '#FFFFFF' }}>Security Rule Enforced:</strong> Sensitive fields like <code>encrypted_file_path</code>, Aadhaar/Govt ID documents and PAN details are encrypted at rest with AES-256-GCM. Public technician profiles only display masked document hashes (e.g. <code>****-9204</code>) and never render raw documents to client applications.
                   </div>
                 </div>
               </div>
@@ -195,14 +219,14 @@ export default function DatabaseSchemaModal() {
 
         {/* Footer */}
         <div style={{
-          padding: '12px 24px',
-          background: '#F8FAFC',
-          borderTop: '1px solid #E2E8F0',
+          padding: '14px 24px',
+          background: 'rgba(11, 16, 40, 0.85)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           fontSize: '12px',
-          color: '#64748B'
+          color: '#94A3B8'
         }}>
           <div>Entity Relationship Diagram: 19 Entities, Foreign Key Referential Integrity Cascades</div>
           <button

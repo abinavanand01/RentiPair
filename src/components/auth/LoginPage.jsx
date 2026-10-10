@@ -35,7 +35,7 @@ export default function LoginPage() {
   return (
     <div style={{
       minHeight: 'calc(100vh - 76px)',
-      background: 'linear-gradient(135deg, #0B1533 0%, #0F1D46 50%, #080F26 100%)',
+      background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.15) 0%, #050816 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -49,9 +49,10 @@ export default function LoginPage() {
         width: '500px',
         height: '500px',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(22, 119, 255, 0.15) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 70%)',
         top: '-100px',
         left: '-100px',
+        filter: 'blur(60px)',
         pointerEvents: 'none'
       }} />
       <div style={{
@@ -59,9 +60,10 @@ export default function LoginPage() {
         width: '400px',
         height: '400px',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(255, 122, 0, 0.1) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(249, 115, 22, 0.1) 0%, transparent 70%)',
         bottom: '-100px',
         right: '-50px',
+        filter: 'blur(60px)',
         pointerEvents: 'none'
       }} />
 
@@ -69,9 +71,12 @@ export default function LoginPage() {
       <div style={{
         width: '100%',
         maxWidth: '1000px',
-        background: '#FFFFFF',
+        background: 'rgba(14, 19, 48, 0.85)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '24px',
-        boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.4)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.6)',
         display: 'grid',
         gridTemplateColumns: '1.05fr 1fr',
         overflow: 'hidden',
@@ -81,13 +86,14 @@ export default function LoginPage() {
 
         {/* LEFT COLUMN: RentiPair Brand & Value Proposition */}
         <div style={{
-          background: 'linear-gradient(145deg, #0B1533 0%, #11204C 100%)',
+          background: 'linear-gradient(145deg, rgba(10, 15, 36, 0.95) 0%, rgba(14, 19, 48, 0.85) 100%)',
           padding: '48px 40px',
           color: '#FFFFFF',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          position: 'relative'
+          position: 'relative',
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)'
         }}>
           <div>
             {/* Logo & Brand Header */}
@@ -96,70 +102,48 @@ export default function LoginPage() {
                 width: '44px',
                 height: '44px',
                 borderRadius: '12px',
-                background: '#FFFFFF',
+                background: '#0E1330',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 14px rgba(0,0,0,0.2)'
+                boxShadow: '0 4px 14px rgba(0,0,0,0.3)'
               }}>
-                <svg width="30" height="30" viewBox="0 0 48 48" fill="none">
-                  <path
-                    d="M14 24 C14 18, 20 14, 24 18 C28 22, 34 26, 34 20 C34 16, 30 14, 28 14"
-                    stroke="#1677FF"
-                    strokeWidth="4.2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M34 24 C34 30, 28 34, 24 30 C20 26, 14 22, 14 28 C14 32, 18 34, 20 34"
-                    stroke="#FF7A00"
-                    strokeWidth="4.2"
-                    strokeLinecap="round"
-                  />
-                  <circle cx="24" cy="24" r="3" fill="#0B1533" />
+                <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
+                  <path d="M14 24 C14 18, 20 14, 24 18 C28 22, 34 26, 34 20 C34 16, 30 14, 28 14" stroke="#3B82F6" strokeWidth="4.2" strokeLinecap="round" />
+                  <path d="M34 24 C34 30, 28 34, 24 30 C20 26, 14 22, 14 28 C14 32, 18 34, 20 34" stroke="#F97316" strokeWidth="4.2" strokeLinecap="round" />
+                  <circle cx="24" cy="24" r="3" fill="#FFFFFF" />
                 </svg>
               </div>
 
               <div>
-                <div style={{
+                <span style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: '24px',
+                  fontSize: '22px',
                   fontWeight: 800,
-                  letterSpacing: '-0.02em',
-                  color: '#FFFFFF'
+                  color: '#FFFFFF',
+                  letterSpacing: '-0.02em'
                 }}>
-                  Renti<span style={{ color: '#1677FF' }}>Pair</span>
-                </div>
-                <div style={{
-                  fontSize: '12px',
-                  color: '#94A3B8',
-                  fontWeight: 600,
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase'
-                }}>
+                  Renti<span style={{ color: '#3B82F6' }}>Pair</span>
+                </span>
+                <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 500 }}>
                   Rent it. Repair it. RentiPair it.
                 </div>
               </div>
             </div>
 
-            {/* Tagline & Pitch */}
+            {/* Platform Tagline */}
             <h2 style={{
-              fontSize: '28px',
+              fontSize: '24px',
               fontWeight: 800,
-              lineHeight: 1.25,
-              color: '#FFFFFF',
-              marginBottom: '16px',
-              letterSpacing: '-0.02em'
+              lineHeight: 1.3,
+              marginBottom: '14px',
+              color: '#FFFFFF'
             }}>
-              One trusted platform for <span style={{ color: '#38BDF8' }}>gear rental</span> &amp; <span style={{ color: '#FB923C' }}>certified repairs</span>.
+              Your complete equipment rental and repair hub.
             </h2>
-
-            <p style={{
-              fontSize: '14.5px',
-              color: '#CBD5E1',
-              lineHeight: 1.6,
-              marginBottom: '32px'
-            }}>
-              Join students, creators, and engineers across India who rent electronics on demand and connect with verified chip-level technicians.
+            <p style={{ fontSize: '14px', color: '#94A3B8', lineHeight: 1.6, marginBottom: '28px' }}>
+              Access premium hardware on demand, or connect with verified electronics technicians for certified repairs.
             </p>
 
             {/* Feature Highlights */}
@@ -169,17 +153,17 @@ export default function LoginPage() {
                   width: '32px',
                   height: '32px',
                   borderRadius: '8px',
-                  background: 'rgba(22, 119, 255, 0.2)',
+                  background: 'rgba(59, 130, 246, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0
                 }}>
-                  <Box size={17} color="#38BDF8" />
+                  <Box size={17} color="#60A5FA" />
                 </div>
                 <div>
-                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#F1F5F9' }}>Secured Escrow Rental Leases</div>
-                  <div style={{ fontSize: '12px', color: '#94A3B8' }}>Security deposits safely locked in escrow until return verification.</div>
+                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#F1F5F9' }}>Verified Tech & Camera Gear</div>
+                  <div style={{ fontSize: '12px', color: '#94A3B8' }}>Every item serial number tracked with escrow deposit security.</div>
                 </div>
               </div>
 
@@ -188,7 +172,7 @@ export default function LoginPage() {
                   width: '32px',
                   height: '32px',
                   borderRadius: '8px',
-                  background: 'rgba(255, 122, 0, 0.2)',
+                  background: 'rgba(249, 115, 22, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -207,7 +191,7 @@ export default function LoginPage() {
                   width: '32px',
                   height: '32px',
                   borderRadius: '8px',
-                  background: 'rgba(16, 185, 129, 0.2)',
+                  background: 'rgba(16, 185, 129, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -226,7 +210,7 @@ export default function LoginPage() {
           <div style={{
             marginTop: '36px',
             paddingTop: '20px',
-            borderTop: '1px solid rgba(255,255,255,0.1)',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
             fontSize: '11.5px',
             color: '#64748B'
           }}>
@@ -240,58 +224,35 @@ export default function LoginPage() {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          background: '#FFFFFF'
+          background: 'rgba(10, 15, 36, 0.95)'
         }}>
-          <div style={{ marginBottom: '28px' }}>
+          <div style={{ marginBottom: '24px' }}>
             <h1 style={{
               fontSize: '26px',
               fontWeight: 800,
-              color: '#0B1533',
+              color: '#FFFFFF',
               letterSpacing: '-0.02em',
               marginBottom: '6px'
             }}>
               Welcome Back
             </h1>
-            <p style={{ fontSize: '14px', color: '#64748B' }}>
+            <p style={{ fontSize: '14px', color: '#94A3B8' }}>
               Log in to manage your rentals, repair requests, and listings.
             </p>
           </div>
 
-          {/* Quick Demo Credentials Autofill */}
+          {/* Quick Admin Access */}
           <div style={{
-            background: '#F8FAFC',
-            border: '1px solid #E2E8F0',
+            background: 'rgba(239, 68, 68, 0.08)',
+            border: '1px solid rgba(239, 68, 68, 0.25)',
             borderRadius: '12px',
             padding: '12px 14px',
             marginBottom: '20px'
           }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
-              ⚡ Instant Demo Credentials
+            <div style={{ fontSize: '11px', fontWeight: 700, color: '#F87171', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
+              🛡️ Admin Verification & Management Access
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('aditya@rentipair.in');
-                  setPassword('password123');
-                }}
-                style={{
-                  background: '#EEF4FF',
-                  border: '1px solid #BFDBFE',
-                  color: '#1677FF',
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                <span>👤 Demo User</span>
-                <span style={{ fontSize: '10px', opacity: 0.7 }}>(Aditya)</span>
-              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -299,9 +260,9 @@ export default function LoginPage() {
                   setPassword('admin123');
                 }}
                 style={{
-                  background: '#FEF2F2',
-                  border: '1px solid #FECACA',
-                  color: '#DC2626',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                  color: '#FCA5A5',
                   padding: '6px 12px',
                   borderRadius: '8px',
                   fontSize: '12px',
@@ -312,19 +273,19 @@ export default function LoginPage() {
                   gap: '6px'
                 }}
               >
-                <span>🛡️ Admin Portal</span>
-                <span style={{ fontSize: '10px', opacity: 0.7 }}>(Full Access)</span>
+                <span>🛡️ Platform Admin</span>
+                <span style={{ fontSize: '10px', opacity: 0.8 }}>(Review & Approvals)</span>
               </button>
             </div>
           </div>
 
           {errorMsg && (
             <div style={{
-              background: '#FEF2F2',
-              border: '1px solid #FECACA',
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
               borderRadius: '10px',
               padding: '12px 14px',
-              color: '#B91C1C',
+              color: '#F87171',
               fontSize: '13px',
               display: 'flex',
               alignItems: 'center',
@@ -339,11 +300,11 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             {/* Email Field */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#E2E8F0', marginBottom: '6px' }}>
                 Email Address
               </label>
               <div style={{ position: 'relative' }}>
-                <Mail size={17} color="#94A3B8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+                <Mail size={17} color="#64748B" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="email"
                   required
@@ -355,7 +316,9 @@ export default function LoginPage() {
                     paddingLeft: '40px',
                     height: '44px',
                     borderRadius: '10px',
-                    border: '1.5px solid #E2E8F0',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    background: 'rgba(14, 19, 48, 0.8)',
+                    color: '#FFFFFF',
                     fontSize: '14px'
                   }}
                 />
@@ -365,7 +328,7 @@ export default function LoginPage() {
             {/* Password Field */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <label style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>
+                <label style={{ fontSize: '13px', fontWeight: 700, color: '#E2E8F0' }}>
                   Password
                 </label>
                 <button
@@ -374,7 +337,7 @@ export default function LoginPage() {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#1677FF',
+                    color: '#60A5FA',
                     fontSize: '12.5px',
                     fontWeight: 600,
                     cursor: 'pointer',
@@ -385,7 +348,7 @@ export default function LoginPage() {
                 </button>
               </div>
               <div style={{ position: 'relative' }}>
-                <Lock size={17} color="#94A3B8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+                <Lock size={17} color="#64748B" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="password"
                   required
@@ -397,7 +360,9 @@ export default function LoginPage() {
                     paddingLeft: '40px',
                     height: '44px',
                     borderRadius: '10px',
-                    border: '1.5px solid #E2E8F0',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    background: 'rgba(14, 19, 48, 0.8)',
+                    color: '#FFFFFF',
                     fontSize: '14px'
                   }}
                 />
@@ -417,7 +382,7 @@ export default function LoginPage() {
                 fontWeight: 700,
                 marginTop: '4px',
                 justifyContent: 'center',
-                background: '#1677FF'
+                boxShadow: '0 0 25px rgba(59, 130, 246, 0.35)'
               }}
             >
               {loading ? 'Authenticating...' : 'Log In'}
@@ -426,8 +391,8 @@ export default function LoginPage() {
 
             {/* Google OAuth Option */}
             <div style={{ position: 'relative', textAlign: 'center', margin: '8px 0' }}>
-              <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: '#E2E8F0' }} />
-              <span style={{ position: 'relative', background: '#FFFFFF', padding: '0 12px', fontSize: '12px', color: '#94A3B8', fontWeight: 600 }}>
+              <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: 'rgba(255, 255, 255, 0.08)' }} />
+              <span style={{ position: 'relative', background: 'rgba(10, 15, 36, 0.95)', padding: '0 12px', fontSize: '12px', color: '#64748B', fontWeight: 600 }}>
                 OR
               </span>
             </div>
@@ -439,9 +404,9 @@ export default function LoginPage() {
                 width: '100%',
                 height: '44px',
                 borderRadius: '10px',
-                border: '1.5px solid #E2E8F0',
-                background: '#FFFFFF',
-                color: '#334155',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                background: 'rgba(255, 255, 255, 0.04)',
+                color: '#E2E8F0',
                 fontSize: '13.5px',
                 fontWeight: 600,
                 display: 'flex',
@@ -463,14 +428,14 @@ export default function LoginPage() {
           </form>
 
           {/* Bottom Switch to Signup */}
-          <div style={{ marginTop: '28px', textAlign: 'center', fontSize: '13.5px', color: '#64748B' }}>
+          <div style={{ marginTop: '28px', textAlign: 'center', fontSize: '13.5px', color: '#94A3B8' }}>
             Don't have an account?{' '}
             <button
               onClick={() => navigateTo('signup')}
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#1677FF',
+                color: '#60A5FA',
                 fontWeight: 700,
                 cursor: 'pointer',
                 padding: 0

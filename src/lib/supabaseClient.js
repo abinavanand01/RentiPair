@@ -10,70 +10,38 @@ export const isSupabaseConfigured = Boolean(
   !supabaseUrl.includes('your-project-id')
 );
 
-// Fallback dummy client for local development when credentials are not yet populated in .env
-// Prevents app from throwing uncaught errors while guiding the developer
+/**
+ * Local Data Storage for Development & Offline Mode
+ * Strictly starts 100% EMPTY without any fake or demo users.
+ * All records must be genuinely created by real users.
+ */
 class LocalAuthStorage {
   constructor() {
     this.sessionKey = 'rentipair_sb_session';
     this.usersKey = 'rentipair_sb_users';
     this.profilesKey = 'rentipair_sb_profiles';
     this.capabilitiesKey = 'rentipair_sb_capabilities';
-    this.seedDefaultUsers();
+    this.tablePrefix = 'rentipair_tbl_';
+
+    // Purge legacy demo users if present in client storage
+    this.cleanLegacyDemoData();
   }
 
-  seedDefaultUsers() {
-    const existing = this.getUsers();
-    if (existing.length === 0) {
-      const demoUser = {
-        id: 'usr_demo_user',
-        email: 'aditya@rentipair.in',
-        password: 'password123',
-        created_at: new Date('2024-08-15').toISOString(),
-        user_metadata: {
-          full_name: 'Aditya Narayan',
-          phone: '+91 98402 11928',
-          city: 'Chennai',
-          avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80'
-        }
-      };
-      const demoAdmin = {
-        id: 'usr_demo_admin',
-        email: 'admin@rentipair.in',
-        password: 'admin123',
-        created_at: new Date('2024-01-01').toISOString(),
-        user_metadata: {
-          full_name: 'Super Admin',
-          phone: '+91 99999 88888',
-          city: 'Chennai',
-          avatar_url: ''
-        }
-      };
-      this.saveUser(demoUser);
-      this.saveUser(demoAdmin);
+  cleanLegacyDemoData() {
+    try {
+      const users = this.getUsers();
+      const hasDemoUser = users.some(u => u.email?.includes('rentipair.in') || u.id === 'usr_demo_user');
+      if (hasDemoUser) {
+        const realUsers = users.filter(u => !u.email?.includes('rentipair.in') && u.id !== 'usr_demo_user');
+        localStorage.setItem(this.usersKey, JSON.stringify(realUsers));
+      }
 
-      this.saveProfile('usr_demo_user', {
-        id: 'usr_demo_user',
-        user_id: 'usr_demo_user',
-        full_name: 'Aditya Narayan',
-        avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-        phone: '+91 98402 11928',
-        city: 'Chennai',
-        onboarding_completed: true,
-        is_admin: false
-      });
-      this.saveCapabilities('usr_demo_user', ['RENTER', 'EQUIPMENT_OWNER']);
-
-      this.saveProfile('usr_demo_admin', {
-        id: 'usr_demo_admin',
-        user_id: 'usr_demo_admin',
-        full_name: 'Super Admin',
-        avatar_url: '',
-        phone: '+91 99999 88888',
-        city: 'Chennai',
-        onboarding_completed: true,
-        is_admin: true
-      });
-      this.saveCapabilities('usr_demo_admin', ['RENTER', 'EQUIPMENT_OWNER', 'TECHNICIAN']);
+      const session = this.getSession();
+      if (session?.user?.email?.includes('rentipair.in') || session?.user?.id === 'usr_demo_user') {
+        localStorage.removeItem(this.sessionKey);
+      }
+    } catch {
+      // ignore
     }
   }
 
@@ -152,6 +120,23 @@ class LocalAuthStorage {
       return capabilities;
     }
   }
+
+  getTableRecords(tableName) {
+    try {
+      const data = localStorage.getItem(this.tablePrefix + tableName);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  saveTableRecords(tableName, records) {
+    try {
+      localStorage.setItem(this.tablePrefix + tableName, JSON.stringify(records));
+    } catch {
+      // ignore
+    }
+  }
 }
 
 const localStorageAuth = new LocalAuthStorage();
@@ -198,6 +183,7 @@ export const supabase = isSupabaseConfigured
             phone: options?.data?.phone || '',
             city: options?.data?.city || 'Chennai',
             onboarding_completed: false,
+            is_admin: false,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           };
@@ -205,7 +191,7 @@ export const supabase = isSupabaseConfigured
           localStorageAuth.saveCapabilities(userId, ['RENTER']);
 
           const session = {
-            access_token: `mock_jwt_${Date.now()}`,
+            access_token: `sb_token_${Date.now()}`,
             token_type: 'bearer',
             expires_in: 3600,
             user
@@ -217,7 +203,7 @@ export const supabase = isSupabaseConfigured
           const users = localStorageAuth.getUsers();
           const found = users.find(u => u.email.toLowerCase() === email.toLowerCase());
           if (!found) {
-            return { data: { user: null, session: null }, error: { message: 'Invalid login credentials. User not found.' } };
+            return { data: { user: null, session: null }, error: { message: 'No registered user found with this email. Please sign up.' } };
           }
           if (found.password && found.password !== password) {
             return { data: { user: null, session: null }, error: { message: 'Invalid password. Please check and try again.' } };
@@ -229,7 +215,7 @@ export const supabase = isSupabaseConfigured
             user_metadata: found.user_metadata || {}
           };
           const session = {
-            access_token: `mock_jwt_${Date.now()}`,
+            access_token: `sb_token_${Date.now()}`,
             token_type: 'bearer',
             expires_in: 3600,
             user
@@ -269,18 +255,25 @@ export const supabase = isSupabaseConfigured
                   const p = localStorageAuth.getProfile(val);
                   return { data: p, error: p ? null : { message: 'Not found' } };
                 }
-                return { data: null, error: null };
+                const items = localStorageAuth.getTableRecords(tableName);
+                const found = items.find(i => i[field] === val);
+                return { data: found || null, error: found ? null : { message: 'Not found' } };
               },
               then: (resolve) => {
                 if (tableName === 'user_capabilities') {
                   const caps = localStorageAuth.getCapabilities(val);
                   resolve({ data: caps.map(c => ({ capability: c })), error: null });
                 } else {
-                  resolve({ data: [], error: null });
+                  const items = localStorageAuth.getTableRecords(tableName);
+                  const matched = items.filter(i => i[field] === val);
+                  resolve({ data: matched, error: null });
                 }
               }
             }),
-            then: (resolve) => resolve({ data: [], error: null })
+            then: (resolve) => {
+              const records = localStorageAuth.getTableRecords(tableName);
+              resolve({ data: records, error: null });
+            }
           }),
           upsert: (record) => ({
             select: () => ({
@@ -289,12 +282,27 @@ export const supabase = isSupabaseConfigured
                   const updated = localStorageAuth.saveProfile(record.id || record.user_id, record);
                   return { data: updated, error: null };
                 }
+                const items = localStorageAuth.getTableRecords(tableName);
+                const idx = items.findIndex(i => i.id === record.id);
+                if (idx >= 0) items[idx] = { ...items[idx], ...record };
+                else items.push(record);
+                localStorageAuth.saveTableRecords(tableName, items);
                 return { data: record, error: null };
               }
             }),
             then: (resolve) => resolve({ data: record, error: null })
           }),
           insert: (records) => ({
+            select: () => ({
+              single: async () => {
+                const arr = Array.isArray(records) ? records : [records];
+                const item = arr[0];
+                const items = localStorageAuth.getTableRecords(tableName);
+                items.push(item);
+                localStorageAuth.saveTableRecords(tableName, items);
+                return { data: item, error: null };
+              }
+            }),
             then: (resolve) => {
               if (tableName === 'user_capabilities') {
                 const arr = Array.isArray(records) ? records : [records];
@@ -302,13 +310,33 @@ export const supabase = isSupabaseConfigured
                 if (userId) {
                   localStorageAuth.saveCapabilities(userId, arr.map(r => r.capability));
                 }
+              } else {
+                const arr = Array.isArray(records) ? records : [records];
+                const items = localStorageAuth.getTableRecords(tableName);
+                items.push(...arr);
+                localStorageAuth.saveTableRecords(tableName, items);
               }
               resolve({ data: records, error: null });
             }
           }),
+          update: (updates) => ({
+            eq: (field, val) => ({
+              then: (resolve) => {
+                const items = localStorageAuth.getTableRecords(tableName);
+                const updated = items.map(i => i[field] === val ? { ...i, ...updates } : i);
+                localStorageAuth.saveTableRecords(tableName, updated);
+                resolve({ data: updated, error: null });
+              }
+            })
+          }),
           delete: () => ({
-            eq: () => ({
-              then: (resolve) => resolve({ data: null, error: null })
+            eq: (field, val) => ({
+              then: (resolve) => {
+                const items = localStorageAuth.getTableRecords(tableName);
+                const remaining = items.filter(i => i[field] !== val);
+                localStorageAuth.saveTableRecords(tableName, remaining);
+                resolve({ data: remaining, error: null });
+              }
             })
           })
         };

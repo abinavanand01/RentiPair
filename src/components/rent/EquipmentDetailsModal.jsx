@@ -14,11 +14,34 @@ import {
   Sparkles,
   Info,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Heart,
+  Scale,
+  MessageSquare,
+  Bell,
+  GraduationCap,
+  ShoppingBag,
+  AlertCircle
 } from 'lucide-react';
 
 export default function EquipmentDetailsModal() {
-  const { modalState, closeModal, openModal } = useApp();
+  const {
+    modalState,
+    closeModal,
+    openModal,
+    currentUser,
+    wishlist,
+    toggleWishlist,
+    isInWishlist,
+    compareList,
+    addToCompare,
+    removeFromCompare,
+    isInCompare,
+    subscribeAvailabilityAlert,
+    isAlertSubscribed,
+    startOrGetConversation
+  } = useApp();
+
   const [selectedDuration, setSelectedDuration] = useState(3); // 1, 3, 7, or custom
   const [customDays, setCustomDays] = useState(5);
   const [deliveryMethod, setDeliveryMethod] = useState('pickup'); // 'pickup' | 'delivery'
@@ -27,15 +50,27 @@ export default function EquipmentDetailsModal() {
   if (!modalState.details?.open || !modalState.details?.data) return null;
 
   const item = modalState.details.data;
+  const isWishlisted = isInWishlist(item.id);
+  const isCompared = isInCompare(item.id);
+  const alertSubscribed = isAlertSubscribed(item.id);
+
+  // Student pricing calculation
+  const hasStudentDiscount = Boolean(item.student_discount_enabled || item.studentDiscountEnabled);
+  const studentDiscountPct = item.student_discount_percent || item.studentDiscountPercent || 10;
+  const studentDailyRate = hasStudentDiscount ? Math.round(item.dailyRate * (1 - studentDiscountPct / 100)) : item.dailyRate;
+  const isUserStudent = Boolean(currentUser?.isStudentVerified);
+
+  // Active rate based on student status
+  const effectiveDailyRate = (hasStudentDiscount && isUserStudent) ? studentDailyRate : item.dailyRate;
 
   // Duration calculation
   const effectiveDays = selectedDuration === 'custom' ? customDays : selectedDuration;
-  const rentalFee = item.dailyRate * effectiveDays;
+  const rentalFee = effectiveDailyRate * effectiveDays;
   const platformFee = Math.max(20, Math.round(rentalFee * 0.05));
   const deliveryFee = deliveryMethod === 'delivery' ? 120 : 0;
   const totalPayableNow = rentalFee + item.securityDeposit + platformFee + deliveryFee;
 
-  const handleProceedToRent = () => {
+  const handleProceedToRent = (isRentToBuy = false) => {
     closeModal('details');
     openModal('rent', {
       equipment: item,
@@ -45,7 +80,22 @@ export default function EquipmentDetailsModal() {
       platformFee,
       deliveryFee,
       deliveryMethod,
-      totalPayableNow
+      totalPayableNow,
+      isRentToBuy,
+      isStudentEligible: hasStudentDiscount && isUserStudent,
+      studentDiscountApplied: (hasStudentDiscount && isUserStudent) ? (item.dailyRate - studentDailyRate) * effectiveDays : 0
+    });
+  };
+
+  const handleMessageOwner = () => {
+    closeModal('details');
+    startOrGetConversation({
+      recipientId: item.owner?.id,
+      recipientName: item.owner?.name || 'Owner',
+      recipientAvatar: item.owner?.avatar || '',
+      equipmentId: item.id,
+      equipmentTitle: item.title,
+      title: `Inquiry regarding ${item.title}`
     });
   };
 
@@ -56,30 +106,76 @@ export default function EquipmentDetailsModal() {
       <div
         className="modal-content extra-wide"
         onClick={e => e.stopPropagation()}
-        style={{ padding: 0, overflow: 'hidden' }}
+        style={{
+          padding: 0,
+          overflow: 'hidden',
+          background: '#0E1330',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 24px 64px -16px rgba(0, 0, 0, 0.7)'
+        }}
       >
         {/* Header Bar */}
         <div style={{
           padding: '14px 20px',
-          borderBottom: '1px solid #E2E8F0',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: '#FFFFFF'
+          background: 'rgba(10, 15, 36, 0.95)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <span className="badge badge-blue">{item.category}</span>
-            <span style={{ fontSize: '13px', color: '#64748B', fontWeight: 600 }}>
-              {item.brand} • {item.model}
+            <span style={{ fontSize: '13px', color: '#94A3B8', fontWeight: 600 }}>
+              {item.brand} {item.model ? `• ${item.model}` : ''}
             </span>
           </div>
 
-          <button
-            onClick={() => closeModal('details')}
-            style={{ color: '#64748B', padding: '4px' }}
-          >
-            <X size={18} />
-          </button>
+          {/* Quick Actions in Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Wishlist Button */}
+            <button
+              type="button"
+              onClick={() => toggleWishlist(item.id)}
+              className="btn btn-outline btn-sm"
+              style={{
+                borderColor: isWishlisted ? 'rgba(239, 68, 68, 0.4)' : 'rgba(255, 255, 255, 0.12)',
+                color: isWishlisted ? '#EF4444' : '#E2E8F0',
+                background: isWishlisted ? 'rgba(239, 68, 68, 0.12)' : 'rgba(255, 255, 255, 0.04)'
+              }}
+            >
+              <Heart size={14} fill={isWishlisted ? '#EF4444' : 'none'} color={isWishlisted ? '#EF4444' : '#94A3B8'} />
+              <span>{isWishlisted ? 'Saved' : 'Wishlist'}</span>
+            </button>
+
+            {/* Compare Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (isCompared) {
+                  removeFromCompare(item.id);
+                } else {
+                  addToCompare(item);
+                }
+              }}
+              className="btn btn-outline btn-sm"
+              style={{
+                borderColor: isCompared ? 'rgba(59, 130, 246, 0.4)' : 'rgba(255, 255, 255, 0.12)',
+                color: isCompared ? '#60A5FA' : '#E2E8F0',
+                background: isCompared ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255, 255, 255, 0.04)'
+              }}
+            >
+              <Scale size={14} />
+              <span>{isCompared ? '✓ Compared' : '+ Compare'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => closeModal('details')}
+              style={{ color: '#94A3B8', padding: '6px', borderRadius: '8px', background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Modal Body: 2 Columns */}
@@ -89,14 +185,16 @@ export default function EquipmentDetailsModal() {
           maxHeight: 'calc(90vh - 64px)',
           overflowY: 'auto'
         }} className="details-modal-grid">
+
           {/* Left Column: Gallery, Specs, Rules, Owner */}
-          <div style={{ padding: '24px', borderRight: '1px solid #E2E8F0' }}>
+          <div style={{ padding: '24px', borderRight: '1px solid rgba(255, 255, 255, 0.08)' }}>
             {/* Image Gallery */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{
                 height: '300px',
                 borderRadius: '14px',
-                background: '#F1F5F9',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 overflow: 'hidden',
                 position: 'relative',
                 marginBottom: '10px'
@@ -107,378 +205,423 @@ export default function EquipmentDetailsModal() {
                   alt={`${item.title} - angle ${activeImageIndex + 1}`}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
-                
+
                 {/* Condition Badge */}
                 <div style={{ position: 'absolute', bottom: '10px', left: '10px' }}>
-                  <span className="badge badge-green" style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.12)' }}>
+                  <span className="badge badge-green" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}>
                     Condition: {item.condition}
                   </span>
                 </div>
 
-                {/* View Angle Pill */}
-                <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
-                  <span style={{
-                    background: 'rgba(11, 21, 51, 0.75)',
-                    color: '#FFFFFF',
-                    backdropFilter: 'blur(4px)',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    padding: '3px 8px',
-                    borderRadius: '999px'
-                  }}>
-                    {activeImageIndex === 0 ? 'Front / Main View' : activeImageIndex === 1 ? 'Angled View' : activeImageIndex === 2 ? 'Kit & Accessories' : 'Condition Detail'}
-                  </span>
+                {/* Availability status badge */}
+                <div style={{ position: 'absolute', top: '10px', left: '10px' }}>
+                  {item.isAvailable ? (
+                    <span style={{
+                      background: 'rgba(16, 185, 129, 0.9)',
+                      color: '#FFFFFF',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      padding: '3px 8px',
+                      borderRadius: '999px',
+                      backdropFilter: 'blur(4px)'
+                    }}>
+                      ✓ Available Now
+                    </span>
+                  ) : (
+                    <span style={{
+                      background: 'rgba(239, 68, 68, 0.9)',
+                      color: '#FFFFFF',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      padding: '3px 8px',
+                      borderRadius: '999px',
+                      backdropFilter: 'blur(4px)'
+                    }}>
+                      Currently Rented
+                    </span>
+                  )}
                 </div>
               </div>
 
               {images.length > 1 && (
-                <div>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '6px' }}>
-                    Multi-Angle Gallery ({images.length} Photos)
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {images.map((img, idx) => {
-                      const angleName = idx === 0 ? 'Front' : idx === 1 ? 'Angle' : idx === 2 ? 'Accessories' : 'Detail';
-                      const isSelected = activeImageIndex === idx;
-                      return (
-                        <button
-                          key={idx}
-                          onClick={() => setActiveImageIndex(idx)}
-                          style={{
-                            width: '64px',
-                            height: '64px',
-                            borderRadius: '10px',
-                            overflow: 'hidden',
-                            border: isSelected ? '2px solid #1677FF' : '1px solid #E2E8F0',
-                            boxShadow: isSelected ? '0 0 0 2px rgba(22, 119, 255, 0.25)' : 'none',
-                            opacity: isSelected ? 1 : 0.65,
-                            position: 'relative',
-                            padding: 0,
-                            cursor: 'pointer',
-                            background: '#F8FAFC',
-                            transition: 'all 0.15s ease'
-                          }}
-                          title={`Switch to ${angleName} view`}
-                        >
-                          <EquipmentImage
-                            src={img}
-                            item={item}
-                            alt={`${item.title} ${angleName}`}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
-                          <span style={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            background: 'rgba(11, 21, 51, 0.75)',
-                            color: '#FFFFFF',
-                            fontSize: '9px',
-                            fontWeight: 600,
-                            padding: '1px 2px',
-                            textAlign: 'center',
-                            backdropFilter: 'blur(2px)'
-                          }}>
-                            {angleName}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {images.map((img, idx) => {
+                    const isSelected = activeImageIndex === idx;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setActiveImageIndex(idx)}
+                        style={{
+                          width: '64px',
+                          height: '64px',
+                          borderRadius: '10px',
+                          overflow: 'hidden',
+                          border: isSelected ? '2px solid #3B82F6' : '1px solid rgba(255, 255, 255, 0.1)',
+                          padding: 0,
+                          cursor: 'pointer',
+                          background: 'rgba(255, 255, 255, 0.04)'
+                        }}
+                      >
+                        <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
             {/* Title & Description */}
-            <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0B1533', marginBottom: '6px' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#FFFFFF', marginBottom: '8px', lineHeight: 1.3 }}>
               {item.title}
             </h2>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '12.5px', color: '#64748B', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px', flexWrap: 'wrap' }}>
               <span className="rating-pill">
-                <Star size={11} fill="#F59E0B" color="#F59E0B" /> {item.rating} ({item.reviewsCount} reviews)
+                <Star size={12} fill="#F59E0B" color="#F59E0B" />
+                <span>{item.rating || 0}</span>
+                <span style={{ fontSize: '11px', color: '#FCD34D' }}>({item.reviewsCount || 0} reviews)</span>
               </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                <MapPin size={13} color="#94A3B8" /> {item.location}
+
+              <span style={{ fontSize: '13px', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <MapPin size={14} color="#64748B" /> {item.location || item.city}
               </span>
             </div>
 
-            <p style={{ fontSize: '13.5px', color: '#475569', lineHeight: 1.6, marginBottom: '18px' }}>
+            {/* Student Discount Highlight Banner */}
+            {hasStudentDiscount && (
+              <div style={{
+                background: 'rgba(139, 92, 246, 0.15)',
+                border: '1px solid rgba(139, 92, 246, 0.35)',
+                borderRadius: '12px',
+                padding: '12px 14px',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '10px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <GraduationCap size={20} color="#C4B5FD" />
+                  <div>
+                    <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#DDD6FE' }}>
+                      🎓 Student Special: ₹{studentDailyRate}/day ({studentDiscountPct}% Off)
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#A78BFA' }}>
+                      {isUserStudent ? '✓ Active on your student-verified account' : 'Verify student ID to unlock this rate'}
+                    </div>
+                  </div>
+                </div>
+
+                {!isUserStudent && (
+                  <button
+                    type="button"
+                    onClick={() => openModal('studentVerify')}
+                    className="btn btn-violet btn-sm"
+                    style={{ fontSize: '11px', height: '28px', padding: '0 10px' }}
+                  >
+                    Verify ID
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Rent-to-Buy Card */}
+            {(item.rent_to_buy_enabled || item.rentToBuyEnabled) && (
+              <div style={{
+                background: 'rgba(249, 115, 22, 0.12)',
+                border: '1px solid rgba(249, 115, 22, 0.3)',
+                borderRadius: '12px',
+                padding: '12px 14px',
+                marginBottom: '16px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#FB923C', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShoppingBag size={15} /> Rent-to-Buy Available
+                  </span>
+                  <span style={{ fontSize: '14px', fontWeight: 800, color: '#FDBA74' }}>
+                    Purchase: ₹{item.purchase_price || item.purchasePrice}
+                  </span>
+                </div>
+                <p style={{ fontSize: '11.5px', color: '#FED7AA', margin: 0, lineHeight: 1.4 }}>
+                  {item.rent_to_buy_terms || 'Love using this gear? You can convert your rental into a direct purchase anytime during your lease.'}
+                </p>
+              </div>
+            )}
+
+            <p style={{ fontSize: '14px', color: '#94A3B8', lineHeight: 1.6, marginBottom: '20px' }}>
               {item.description}
             </p>
 
-            {/* Specifications Table */}
-            {item.specs && (
-              <div style={{ marginBottom: '20px' }}>
-                <h4 style={{ fontSize: '13.5px', fontWeight: 700, color: '#0B1533', marginBottom: '8px' }}>
-                  Specifications
-                </h4>
-                <div style={{
-                  background: '#F8FAFC',
-                  borderRadius: '10px',
-                  border: '1px solid #E2E8F0',
-                  overflow: 'hidden'
-                }}>
-                  {Object.entries(item.specs).map(([key, val], idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        padding: '8px 12px',
-                        fontSize: '12.5px',
-                        borderBottom: idx === Object.keys(item.specs).length - 1 ? 'none' : '1px solid #F1F5F9'
-                      }}
-                    >
-                      <span style={{ color: '#64748B', fontWeight: 500 }}>{key}</span>
-                      <span style={{ color: '#0B1533', fontWeight: 600 }}>{val}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Rental Rules */}
-            {item.rentalRules && (
-              <div style={{ marginBottom: '20px' }}>
-                <h4 style={{ fontSize: '13.5px', fontWeight: 700, color: '#0B1533', marginBottom: '8px' }}>
-                  Rental & Handover Rules
-                </h4>
-                <ul style={{ paddingLeft: '18px', fontSize: '12.5px', color: '#475569', lineHeight: 1.55 }}>
-                  {item.rentalRules.map((rule, idx) => (
-                    <li key={idx} style={{ marginBottom: '3px' }}>{rule}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Owner Profile Card */}
+            {/* Verified Owner Card with Message Button */}
             <div style={{
-              background: '#F8FAFC',
-              borderRadius: '12px',
-              border: '1px solid #E2E8F0',
-              padding: '14px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              borderRadius: '14px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              padding: '16px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between'
+              justifyContent: 'space-between',
+              gap: '12px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <img
-                  src={item.owner.avatar}
-                  alt={item.owner.name}
-                  style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover' }}
-                />
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '13.5px', color: '#0B1533', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {item.owner.name}
-                    <span style={{ color: '#1677FF', display: 'flex', alignItems: 'center', gap: '2px', fontSize: '10.5px' }}>
-                      <CheckCircle2 size={11} /> Verified
-                    </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {item.owner?.avatar ? (
+                  <img src={item.owner.avatar} alt={item.owner.name} style={{ width: '46px', height: '46px', borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: '46px', height: '46px', borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                    {item.owner?.name ? item.owner.name.charAt(0) : 'O'}
                   </div>
-                  <div style={{ fontSize: '11.5px', color: '#64748B' }}>
-                    Member since {item.owner.memberSince} • {item.owner.completedRentals} completed rentals
+                )}
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {item.owner?.name || 'Verified Owner'}
+                    <CheckCircle2 size={13} color="#3B82F6" />
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#94A3B8' }}>
+                    {item.city} • Verified Identity &amp; Escrow Owner
                   </div>
                 </div>
               </div>
 
-              <div style={{ textAlign: 'right', fontSize: '11.5px', color: '#059669', fontWeight: 600 }}>
-                Replies {item.owner.responseTime}
-              </div>
+              <button
+                type="button"
+                onClick={handleMessageOwner}
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: '12px' }}
+              >
+                <MessageSquare size={13} />
+                <span>Message Owner</span>
+              </button>
             </div>
           </div>
 
-          {/* Right Column: Pricing & Dynamic Rental Calculator */}
-          <div style={{ padding: '24px', background: '#FAFCFF', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          {/* Right Column: Pricing & Rental Calculation */}
+          <div style={{ padding: '24px', background: 'rgba(10, 15, 36, 0.95)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
-              {/* Daily Rate Display */}
-              <div style={{ marginBottom: '18px' }}>
-                <span style={{ fontSize: '12px', color: '#64748B' }}>Daily Rental Rate</span>
-                <div style={{ fontSize: '28px', fontWeight: 800, color: '#1677FF' }}>
-                  ₹{item.dailyRate}
-                  <span style={{ fontSize: '14px', color: '#64748B', fontWeight: 500 }}> / day</span>
+              {/* Daily Price Header */}
+              <div style={{
+                background: 'rgba(14, 19, 48, 0.8)',
+                borderRadius: '14px',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                padding: '16px',
+                marginBottom: '20px'
+              }}>
+                <div style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 600 }}>Daily Rental Rate</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                  <span style={{ fontSize: '28px', fontWeight: 800, color: '#3B82F6' }}>
+                    ₹{effectiveDailyRate}
+                  </span>
+                  <span style={{ fontSize: '13px', color: '#94A3B8' }}>/ day</span>
+                  {hasStudentDiscount && isUserStudent && (
+                    <span style={{ fontSize: '12px', color: '#A78BFA', fontWeight: 700, marginLeft: '6px' }}>
+                      (🎓 Student Rate)
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* Duration Selector */}
               <div className="form-group" style={{ marginBottom: '16px' }}>
-                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Calendar size={14} color="#1677FF" /> Select Rental Duration
-                </label>
+                <label className="form-label">Rental Duration</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
-                  {[1, 3, 7, 'custom'].map(dur => (
+                  {[1, 3, 7, 'custom'].map(d => (
                     <button
-                      key={dur}
+                      key={d}
                       type="button"
-                      onClick={() => setSelectedDuration(dur)}
+                      onClick={() => setSelectedDuration(d)}
                       style={{
-                        padding: '8px 2px',
+                        padding: '9px 4px',
                         borderRadius: '8px',
-                        fontSize: '12.5px',
+                        border: selectedDuration === d ? '2px solid #3B82F6' : '1px solid rgba(255, 255, 255, 0.1)',
+                        background: selectedDuration === d ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                        color: selectedDuration === d ? '#60A5FA' : '#CBD5E1',
                         fontWeight: 700,
-                        textAlign: 'center',
-                        background: selectedDuration === dur ? '#1677FF' : '#FFFFFF',
-                        color: selectedDuration === dur ? '#FFFFFF' : '#334155',
-                        border: selectedDuration === dur ? '1.5px solid #1677FF' : '1.5px solid #CBD5E1',
-                        boxShadow: selectedDuration === dur ? '0 2px 8px rgba(22, 119, 255, 0.25)' : 'none'
+                        fontSize: '12.5px',
+                        cursor: 'pointer'
                       }}
                     >
-                      {dur === 'custom' ? 'Custom' : `${dur} ${dur === 1 ? 'Day' : 'Days'}`}
+                      {d === 'custom' ? 'Custom' : `${d} Day${d > 1 ? 's' : ''}`}
                     </button>
                   ))}
                 </div>
 
                 {selectedDuration === 'custom' && (
-                  <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '12.5px', color: '#64748B' }}>Number of days:</span>
+                  <div style={{ marginTop: '10px' }}>
                     <input
                       type="number"
                       min="1"
-                      max="30"
+                      max="90"
                       value={customDays}
                       onChange={e => setCustomDays(Math.max(1, Number(e.target.value)))}
-                      style={{
-                        width: '74px',
-                        padding: '5px 8px',
-                        borderRadius: '6px',
-                        border: '1.5px solid #CBD5E1',
-                        fontSize: '13.5px',
-                        fontWeight: 700,
-                        color: '#0B1533'
-                      }}
+                      className="form-input"
+                      placeholder="Number of days"
                     />
                   </div>
                 )}
               </div>
 
-              {/* Delivery / Pickup Choice */}
-              <div className="form-group" style={{ marginBottom: '18px' }}>
-                <label className="form-label">Handover Preference</label>
+              {/* Handover Preference */}
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label">Handover Method</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     type="button"
                     onClick={() => setDeliveryMethod('pickup')}
                     style={{
                       flex: 1,
-                      padding: '8px',
+                      padding: '9px',
                       borderRadius: '8px',
-                      border: deliveryMethod === 'pickup' ? '1.5px solid #1677FF' : '1px solid #CBD5E1',
-                      background: deliveryMethod === 'pickup' ? '#EEF4FF' : '#FFFFFF',
-                      fontSize: '12px',
+                      border: deliveryMethod === 'pickup' ? '1.5px solid #3B82F6' : '1px solid rgba(255, 255, 255, 0.1)',
+                      background: deliveryMethod === 'pickup' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                      fontSize: '12.5px',
                       fontWeight: 600,
-                      color: deliveryMethod === 'pickup' ? '#1677FF' : '#334155',
-                      textAlign: 'center'
+                      color: deliveryMethod === 'pickup' ? '#60A5FA' : '#CBD5E1',
+                      cursor: 'pointer'
                     }}
                   >
                     📍 Self Pickup (Free)
                   </button>
-
                   <button
                     type="button"
                     onClick={() => setDeliveryMethod('delivery')}
                     style={{
                       flex: 1,
-                      padding: '8px',
+                      padding: '9px',
                       borderRadius: '8px',
-                      border: deliveryMethod === 'delivery' ? '1.5px solid #1677FF' : '1px solid #CBD5E1',
-                      background: deliveryMethod === 'delivery' ? '#EEF4FF' : '#FFFFFF',
-                      fontSize: '12px',
+                      border: deliveryMethod === 'delivery' ? '1.5px solid #3B82F6' : '1px solid rgba(255, 255, 255, 0.1)',
+                      background: deliveryMethod === 'delivery' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                      fontSize: '12.5px',
                       fontWeight: 600,
-                      color: deliveryMethod === 'delivery' ? '#1677FF' : '#334155',
-                      textAlign: 'center'
+                      color: deliveryMethod === 'delivery' ? '#60A5FA' : '#CBD5E1',
+                      cursor: 'pointer'
                     }}
                   >
-                    🚚 Doorstep (+₹120)
+                    🚚 Courier (+₹120)
                   </button>
                 </div>
               </div>
 
-              {/* Cost Breakdown Calculation Card */}
+              {/* Calculation Summary Card */}
               <div style={{
-                background: '#FFFFFF',
+                background: 'rgba(14, 19, 48, 0.8)',
                 borderRadius: '12px',
-                border: '1px solid #E2E8F0',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 padding: '14px',
                 marginBottom: '16px'
               }}>
-                <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#0B1533', marginBottom: '10px' }}>
+                <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#FFFFFF', marginBottom: '8px' }}>
                   Transparent Cost Breakdown
                 </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: '#64748B', marginBottom: '6px' }}>
-                  <span>Rental Fee ({effectiveDays} days × ₹{item.dailyRate})</span>
-                  <span style={{ fontWeight: 600, color: '#0B1533' }}>₹{rentalFee}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: '#94A3B8', marginBottom: '6px' }}>
+                  <span>Rental ({effectiveDays} days × ₹{effectiveDailyRate})</span>
+                  <span style={{ fontWeight: 600, color: '#FFFFFF' }}>₹{rentalFee}</span>
                 </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: '#64748B', marginBottom: '6px' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    Refundable Security Deposit
-                    <Info size={12} color="#94A3B8" />
-                  </span>
-                  <span style={{ fontWeight: 600, color: '#059669' }}>₹{item.securityDeposit}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: '#94A3B8', marginBottom: '6px' }}>
+                  <span>Refundable Security Deposit</span>
+                  <span style={{ fontWeight: 600, color: '#34D399' }}>₹{item.securityDeposit}</span>
                 </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: '#64748B', marginBottom: '6px' }}>
-                  <span>Platform Protection Fee</span>
-                  <span style={{ fontWeight: 600, color: '#0B1533' }}>₹{platformFee}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: '#94A3B8', marginBottom: '6px' }}>
+                  <span>Platform Escrow Fee</span>
+                  <span style={{ fontWeight: 600, color: '#FFFFFF' }}>₹{platformFee}</span>
                 </div>
-
                 {deliveryMethod === 'delivery' && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: '#64748B', marginBottom: '6px' }}>
-                    <span>Doorstep Courier</span>
-                    <span style={{ fontWeight: 600, color: '#0B1533' }}>₹120</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: '#94A3B8', marginBottom: '6px' }}>
+                    <span>Courier Delivery</span>
+                    <span style={{ fontWeight: 600, color: '#FFFFFF' }}>₹120</span>
                   </div>
                 )}
-
                 <div style={{
-                  borderTop: '1px solid #F1F5F9',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.08)',
                   paddingTop: '8px',
-                  marginTop: '8px',
+                  marginTop: '6px',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center'
                 }}>
                   <div>
-                    <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#0B1533' }}>Total Payable Now</div>
-                    <div style={{ fontSize: '10.5px', color: '#059669' }}>
-                      (Includes ₹{item.securityDeposit} refundable deposit)
-                    </div>
+                    <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#FFFFFF' }}>Total Payable Now</div>
+                    <div style={{ fontSize: '10.5px', color: '#34D399' }}>(Includes ₹{item.securityDeposit} refundable deposit)</div>
                   </div>
-                  <span style={{ fontSize: '18px', fontWeight: 800, color: '#1677FF' }}>
-                    ₹{totalPayableNow}
-                  </span>
+                  <span style={{ fontSize: '18px', fontWeight: 800, color: '#3B82F6' }}>₹{totalPayableNow}</span>
                 </div>
               </div>
 
-              {/* Escrow Trust Guarantee Note */}
+              {/* Escrow Guarantee */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
                 fontSize: '11.5px',
-                color: '#475569',
-                background: '#ECFDF5',
+                color: '#CBD5E1',
+                background: 'rgba(16, 185, 129, 0.12)',
                 padding: '8px 10px',
                 borderRadius: '8px',
-                border: '1px solid #A7F3D0',
+                border: '1px solid rgba(16, 185, 129, 0.25)',
                 marginBottom: '16px'
               }}>
-                <ShieldCheck size={16} color="#059669" style={{ flexShrink: 0 }} />
+                <ShieldCheck size={16} color="#34D399" style={{ flexShrink: 0 }} />
                 <span>
-                  <strong>Escrow Guarantee:</strong> Security deposit is held safely and refunded automatically on return.
+                  <strong style={{ color: '#FFFFFF' }}>Escrow Protected:</strong> Security deposit is automatically refunded upon return verification.
                 </span>
               </div>
             </div>
 
-            {/* Action Button */}
+            {/* Primary Action Buttons */}
             <div>
-              <button
-                onClick={handleProceedToRent}
-                className="btn btn-primary btn-lg"
-                style={{ width: '100%', fontSize: '15px' }}
-              >
-                <span>Rent Now — Pay ₹{totalPayableNow}</span>
-                <ArrowRight size={16} />
-              </button>
+              {item.isAvailable ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleProceedToRent(false)}
+                    className="btn btn-primary btn-lg"
+                    style={{ width: '100%', fontSize: '15px' }}
+                  >
+                    <span>Rent Now — Pay ₹{totalPayableNow}</span>
+                    <ArrowRight size={16} />
+                  </button>
+
+                  {(item.rent_to_buy_enabled || item.rentToBuyEnabled) && (
+                    <button
+                      type="button"
+                      onClick={() => handleProceedToRent(true)}
+                      className="btn btn-orange"
+                      style={{ width: '100%', fontSize: '13.5px' }}
+                    >
+                      <ShoppingBag size={15} />
+                      <span>Start Rent-to-Buy Option</span>
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    fontSize: '12.5px',
+                    color: '#F87171',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <Clock size={16} />
+                    <span>
+                      Currently Rented {item.currentlyRentedUntil ? `until ${new Date(item.currentlyRentedUntil).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => subscribeAvailabilityAlert(item.id)}
+                    className={alertSubscribed ? 'btn btn-outline' : 'btn btn-orange'}
+                    style={{ width: '100%', height: '44px' }}
+                  >
+                    <Bell size={16} />
+                    <span>{alertSubscribed ? 'Subscribed to Availability Alert 🔔' : 'Notify Me When Available'}</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

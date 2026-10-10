@@ -7,6 +7,11 @@ import Footer from './components/common/Footer';
 import GlobalSearchModal from './components/common/GlobalSearchModal';
 import NotificationDrawer from './components/common/NotificationDrawer';
 import DatabaseSchemaModal from './components/common/DatabaseSchemaModal';
+import CompareModal from './components/common/CompareModal';
+import CompareDock from './components/common/CompareDock';
+import StudentVerifyModal from './components/common/StudentVerifyModal';
+import ChatModal from './components/chat/ChatModal';
+import SplashScreen from './components/common/SplashScreen';
 
 // Auth Components
 import LoginPage from './components/auth/LoginPage';
@@ -43,6 +48,9 @@ function MainApp() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Animated Initial Brand Intro Splash */}
+      <SplashScreen />
+
       {/* Sticky Navigation */}
       <Navbar />
 
@@ -90,6 +98,10 @@ function MainApp() {
       <RepairBookingModal />
       <BecomeTechnicianModal />
       <ForgotPasswordModal />
+      <CompareModal />
+      <ChatModal />
+      <StudentVerifyModal />
+      <CompareDock />
 
       {/* Footer (hidden on auth pages for maximum focus) */}
       {currentPage !== 'login' && currentPage !== 'signup' && currentPage !== 'onboarding' && (

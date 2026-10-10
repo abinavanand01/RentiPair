@@ -80,6 +80,11 @@ CREATE TABLE IF NOT EXISTS public.equipment (
     images TEXT[] DEFAULT ARRAY[]::TEXT[],
     status TEXT DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED', 'UNLISTED')),
     is_available BOOLEAN DEFAULT TRUE,
+    rent_to_buy_enabled BOOLEAN DEFAULT FALSE,
+    purchase_price NUMERIC(10, 2),
+    rent_to_buy_terms TEXT,
+    student_discount_enabled BOOLEAN DEFAULT FALSE,
+    student_discount_percent INTEGER DEFAULT 10,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -96,10 +101,110 @@ CREATE TABLE IF NOT EXISTS public.rentals (
     end_date DATE NOT NULL,
     rental_price NUMERIC(10, 2) NOT NULL,
     deposit NUMERIC(10, 2) NOT NULL,
+    damage_protection_selected BOOLEAN DEFAULT FALSE,
+    damage_protection_fee NUMERIC(10, 2) DEFAULT 0,
+    is_rent_to_buy BOOLEAN DEFAULT FALSE,
+    student_discount_applied NUMERIC(10, 2) DEFAULT 0,
     status rental_status_type DEFAULT 'PENDING',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     CONSTRAINT valid_dates CHECK (end_date >= start_date)
+);
+
+-- =====================================================================
+-- 6B. WISHLISTS TABLE
+-- User saved equipment favorites
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS public.wishlists (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    equipment_id UUID NOT NULL REFERENCES public.equipment(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT unique_user_wishlist UNIQUE (user_id, equipment_id)
+);
+
+-- =====================================================================
+-- 6C. AVAILABILITY ALERTS TABLE
+-- Notify when currently rented equipment becomes available
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS public.availability_alerts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    equipment_id UUID NOT NULL REFERENCES public.equipment(id) ON DELETE CASCADE,
+    status TEXT DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'NOTIFIED', 'CANCELLED')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    notified_at TIMESTAMPTZ,
+    CONSTRAINT unique_user_alert UNIQUE (user_id, equipment_id)
+);
+
+-- =====================================================================
+-- 6D. IN-APP CONVERSATIONS & MESSAGES
+-- Equipment Owner <-> Renter, Customer <-> Technician
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS public.conversations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    equipment_id UUID REFERENCES public.equipment(id) ON DELETE SET NULL,
+    repair_id UUID REFERENCES public.repair_requests(id) ON DELETE SET NULL,
+    title TEXT NOT NULL,
+    last_message TEXT,
+    last_message_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.conversation_participants (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    conversation_id UUID NOT NULL REFERENCES public.conversations(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    joined_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT unique_participant UNIQUE (conversation_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    conversation_id UUID NOT NULL REFERENCES public.conversations(id) ON DELETE CASCADE,
+    sender_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    read_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================================
+-- 6E. REFERRALS & REFERRAL REWARDS
+-- Tracking referrals and earned credits
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS public.referrals (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    referrer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    referred_user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    referral_code TEXT NOT NULL,
+    status TEXT DEFAULT 'REGISTERED' CHECK (status IN ('REGISTERED', 'QUALIFIED', 'REWARDED')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    qualified_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS public.referral_rewards (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    referral_id UUID REFERENCES public.referrals(id) ON DELETE SET NULL,
+    amount NUMERIC(10, 2) NOT NULL DEFAULT 100,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================================
+-- 6F. STUDENT VERIFICATIONS TABLE
+-- Verification documents and student status
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS public.student_verifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL UNIQUE REFERENCES public.profiles(id) ON DELETE CASCADE,
+    institution_name TEXT NOT NULL,
+    student_email TEXT,
+    document_url TEXT,
+    status verification_status_type DEFAULT 'PENDING',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    reviewed_at TIMESTAMPTZ
 );
 
 -- =====================================================================

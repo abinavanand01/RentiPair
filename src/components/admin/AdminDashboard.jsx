@@ -29,38 +29,61 @@ export default function AdminDashboard() {
     repairs,
     updateEquipmentStatus,
     updateTechnicianStatus,
-    showToast
+    showToast,
+    currentUser
   } = useApp();
 
-  const [activeSection, setActiveSection] = useState('verification'); // 'verification', 'equipment', 'technicians', 'disputes', 'metrics'
+  const [activeSection, setActiveSection] = useState('verification'); // 'verification', 'equipment', 'technicians', 'disputes', 'users'
 
-  // Admin metrics
-  const totalUsersCount = 1420;
+  // Real users from storage or currentUser
+  const [usersList, setUsersList] = useState(() => {
+    try {
+      const stored = localStorage.getItem('rentipair_sb_users');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const realUsers = parsed.filter(u =>
+            !u.email?.includes('demo') &&
+            u.email !== 'aditya.n@rentipair.in' &&
+            u.email !== 'rajesh.k@rentipair.in'
+          );
+          if (realUsers.length > 0) {
+            return realUsers.map(u => ({
+              id: u.id,
+              name: u.user_metadata?.full_name || u.email?.split('@')[0] || 'User',
+              email: u.email,
+              role: u.email?.includes('admin') ? 'Admin' : 'User',
+              status: 'Active',
+              kyc: 'Verified'
+            }));
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return currentUser ? [{
+      id: currentUser.id,
+      name: currentUser.name,
+      email: currentUser.email,
+      role: currentUser.isAdmin ? 'Admin' : 'User',
+      status: 'Active',
+      kyc: 'Verified'
+    }] : [];
+  });
+
+  const [disputesList, setDisputesList] = useState([]);
+
+  // Admin metrics derived 100% dynamically from real database collections
+  const totalUsersCount = usersList.length;
   const verifiedTechsCount = technicians.filter(t => t.status === 'Approved').length;
   const totalEquipmentCount = equipment.length;
   const pendingEquipmentCount = equipment.filter(e => e.status === 'Pending').length;
   const pendingTechCount = technicians.filter(t => t.status === 'Pending').length;
   const activeRentalsCount = rentals.filter(r => r.status === 'Active').length;
   const repairRequestsCount = repairs.length;
-  const totalRevenue = '₹1,42,850';
-
-  const [usersList, setUsersList] = useState([
-    { id: 'usr-1', name: 'Aditya Narayan', email: 'aditya.n@rentipair.in', role: 'User / Renter', status: 'Active', kyc: 'Verified' },
-    { id: 'usr-2', name: 'Rajesh Kannan', email: 'rajesh.k@rentipair.in', role: 'Verified Technician', status: 'Active', kyc: 'Verified' },
-    { id: 'usr-3', name: 'Manoj Swaminathan', email: 'manoj.s@gmail.com', role: 'Equipment Owner', status: 'Active', kyc: 'Verified' },
-    { id: 'usr-4', name: 'Suspect User #809', email: 'anon9912@tempmail.com', role: 'User', status: 'Suspicious', kyc: 'Failed' }
-  ]);
-
-  const [disputesList, setDisputesList] = useState([
-    {
-      id: 'DISP-101',
-      rentalId: 'RNT-9041',
-      reportedBy: 'Karthik Subramanian (Owner)',
-      reason: 'Calculator returned with faint battery cover smudge',
-      claimAmount: '₹150 cleaning fee',
-      status: 'Open Review'
-    }
-  ]);
+  const completedServicesCount = rentals.filter(r => r.status === 'Completed').length + repairs.filter(r => r.status === 'Completed').length;
+  const totalRevenue = '₹' + rentals.filter(r => r.status === 'Completed').reduce((sum, r) => sum + (r.totalAmount || 0), 0).toLocaleString('en-IN');
 
   const handleSuspendUser = (userId) => {
     setUsersList(prev =>
@@ -75,12 +98,26 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div style={{ background: '#F8FAFC', minHeight: 'calc(100vh - 76px)', padding: '28px 0 80px' }}>
-      <div className="container">
+    <div style={{ background: '#050816', minHeight: 'calc(100vh - 76px)', padding: '28px 0 80px', position: 'relative' }}>
+      {/* Ambient background glows */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: '20%',
+        width: '500px',
+        height: '400px',
+        background: 'radial-gradient(circle, rgba(239, 68, 68, 0.08) 0%, transparent 70%)',
+        filter: 'blur(80px)',
+        pointerEvents: 'none'
+      }} />
+
+      <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         {/* Admin Header */}
         <div style={{
-          background: 'linear-gradient(135deg, #0B1533 0%, #111D42 60%, #0F1A3A 100%)',
+          background: 'linear-gradient(135deg, rgba(14, 19, 48, 0.85) 0%, rgba(10, 15, 36, 0.95) 100%)',
+          backdropFilter: 'blur(16px)',
           borderRadius: '16px',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
           padding: '20px 24px',
           color: '#FFFFFF',
           marginBottom: '24px',
@@ -88,13 +125,15 @@ export default function AdminDashboard() {
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '16px'
+          gap: '16px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)'
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{
-                background: '#EF4444',
-                color: '#FFFFFF',
+                background: 'rgba(239, 68, 68, 0.2)',
+                color: '#F87171',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
                 padding: '2px 8px',
                 borderRadius: '6px',
                 fontSize: '10.5px',
@@ -103,7 +142,7 @@ export default function AdminDashboard() {
               }}>
                 ADMIN CONSOLE
               </span>
-              <span style={{ fontSize: '12.5px', color: '#CBD5E1' }}>Secure Moderation & Operations Panel</span>
+              <span style={{ fontSize: '12.5px', color: '#94A3B8' }}>Secure Moderation & Operations Panel</span>
             </div>
             <h1 style={{ fontSize: '21px', fontWeight: 800, color: '#FFFFFF', marginTop: '4px' }}>
               RentiPair Platform Administration
@@ -112,7 +151,7 @@ export default function AdminDashboard() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{
-              background: 'rgba(255,255,255,0.1)',
+              background: 'rgba(239, 68, 68, 0.15)',
               padding: '6px 14px',
               borderRadius: '999px',
               fontSize: '12.5px',
@@ -131,44 +170,44 @@ export default function AdminDashboard() {
           gap: '12px',
           marginBottom: '28px'
         }}>
-          <div style={{ background: '#FFFFFF', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-            <div style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 600 }}>Total Users</div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#0F172A' }}>{totalUsersCount}</div>
+          <div style={{ background: 'rgba(14, 19, 48, 0.75)', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <div style={{ fontSize: '11.5px', color: '#94A3B8', fontWeight: 600 }}>Total Users</div>
+            <div style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF' }}>{totalUsersCount}</div>
           </div>
 
-          <div style={{ background: '#FFFFFF', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-            <div style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 600 }}>Verified Techs</div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#0066FF' }}>{verifiedTechsCount}</div>
+          <div style={{ background: 'rgba(14, 19, 48, 0.75)', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <div style={{ fontSize: '11.5px', color: '#94A3B8', fontWeight: 600 }}>Verified Techs</div>
+            <div style={{ fontSize: '20px', fontWeight: 800, color: '#60A5FA' }}>{verifiedTechsCount}</div>
           </div>
 
-          <div style={{ background: '#FFFFFF', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-            <div style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 600 }}>Equipment Listings</div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#0F172A' }}>{totalEquipmentCount}</div>
+          <div style={{ background: 'rgba(14, 19, 48, 0.75)', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <div style={{ fontSize: '11.5px', color: '#94A3B8', fontWeight: 600 }}>Equipment Listings</div>
+            <div style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF' }}>{totalEquipmentCount}</div>
           </div>
 
-          <div style={{ background: '#FFFFFF', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-            <div style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 600 }}>Active Rentals</div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#059669' }}>{activeRentalsCount}</div>
+          <div style={{ background: 'rgba(14, 19, 48, 0.75)', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <div style={{ fontSize: '11.5px', color: '#94A3B8', fontWeight: 600 }}>Active Rentals</div>
+            <div style={{ fontSize: '20px', fontWeight: 800, color: '#34D399' }}>{activeRentalsCount}</div>
           </div>
 
-          <div style={{ background: '#FFFFFF', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-            <div style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 600 }}>Repair Requests</div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#EA580C' }}>{repairRequestsCount}</div>
+          <div style={{ background: 'rgba(14, 19, 48, 0.75)', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <div style={{ fontSize: '11.5px', color: '#94A3B8', fontWeight: 600 }}>Repair Requests</div>
+            <div style={{ fontSize: '20px', fontWeight: 800, color: '#FB923C' }}>{repairRequestsCount}</div>
           </div>
 
-          <div style={{ background: '#FEF3C7', padding: '14px', borderRadius: '12px', border: '1px solid #FCD34D' }}>
-            <div style={{ fontSize: '11.5px', color: '#92400E', fontWeight: 700 }}>Pending Review</div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#B45309' }}>{pendingTechCount + pendingEquipmentCount}</div>
+          <div style={{ background: 'rgba(245, 158, 11, 0.12)', padding: '14px', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+            <div style={{ fontSize: '11.5px', color: '#FCD34D', fontWeight: 700 }}>Pending Review</div>
+            <div style={{ fontSize: '20px', fontWeight: 800, color: '#F59E0B' }}>{pendingTechCount + pendingEquipmentCount}</div>
           </div>
 
-          <div style={{ background: '#FFFFFF', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-            <div style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 600 }}>Completed Services</div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#0F172A' }}>482</div>
+          <div style={{ background: 'rgba(14, 19, 48, 0.75)', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <div style={{ fontSize: '11.5px', color: '#94A3B8', fontWeight: 600 }}>Completed Services</div>
+            <div style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF' }}>{completedServicesCount}</div>
           </div>
 
-          <div style={{ background: '#ECFDF5', padding: '14px', borderRadius: '12px', border: '1px solid #A7F3D0' }}>
-            <div style={{ fontSize: '11.5px', color: '#065F46', fontWeight: 700 }}>Revenue</div>
-            <div style={{ fontSize: '18px', fontWeight: 800, color: '#047857' }}>{totalRevenue}</div>
+          <div style={{ background: 'rgba(16, 185, 129, 0.12)', padding: '14px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+            <div style={{ fontSize: '11.5px', color: '#6EE7B7', fontWeight: 700 }}>Revenue</div>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: '#10B981' }}>{totalRevenue}</div>
           </div>
         </div>
 
@@ -176,10 +215,11 @@ export default function AdminDashboard() {
         <div style={{
           display: 'flex',
           gap: '8px',
-          background: '#FFFFFF',
+          background: 'rgba(14, 19, 48, 0.75)',
+          backdropFilter: 'blur(16px)',
           padding: '8px',
           borderRadius: '12px',
-          border: '1px solid #E2E8F0',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
           marginBottom: '24px',
           flexWrap: 'wrap'
         }}>
@@ -198,10 +238,11 @@ export default function AdminDashboard() {
                 borderRadius: '8px',
                 fontSize: '13px',
                 fontWeight: 700,
-                background: activeSection === tab.id ? '#0F172A' : 'transparent',
-                color: activeSection === tab.id ? '#FFFFFF' : '#475569',
+                background: activeSection === tab.id ? '#3B82F6' : 'transparent',
+                color: activeSection === tab.id ? '#FFFFFF' : '#94A3B8',
                 border: 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
               }}
             >
               {tab.label}
@@ -213,13 +254,13 @@ export default function AdminDashboard() {
         {activeSection === 'verification' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Pending Technicians */}
-            <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', marginBottom: '14px' }}>
+            <div style={{ background: 'rgba(14, 19, 48, 0.85)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '24px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#FFFFFF', marginBottom: '14px' }}>
                 Technician Applications Awaiting Verification ({pendingTechCount})
               </h3>
 
               {pendingTechCount === 0 ? (
-                <div style={{ color: '#059669', fontSize: '13px', fontWeight: 600 }}>
+                <div style={{ color: '#34D399', fontSize: '13px', fontWeight: 600 }}>
                   ✓ All technician verification queues are up to date!
                 </div>
               ) : (
@@ -233,19 +274,19 @@ export default function AdminDashboard() {
                         justifyContent: 'space-between',
                         padding: '16px',
                         borderRadius: '12px',
-                        border: '1px solid #FED7AA',
-                        background: '#FFFBF8',
+                        border: '1px solid rgba(249, 115, 22, 0.3)',
+                        background: 'rgba(249, 115, 22, 0.06)',
                         flexWrap: 'wrap',
                         gap: '12px'
                       }}
                     >
                       <div>
-                        <div style={{ fontWeight: 800, fontSize: '15px', color: '#0F172A' }}>{t.name}</div>
-                        <div style={{ fontSize: '12.5px', color: '#64748B' }}>
+                        <div style={{ fontWeight: 800, fontSize: '15px', color: '#FFFFFF' }}>{t.name}</div>
+                        <div style={{ fontSize: '12.5px', color: '#94A3B8' }}>
                           Specialty: {t.title} • {t.yearsExperience} yrs exp • {t.city}
                         </div>
-                        <div style={{ fontSize: '12px', color: '#059669', marginTop: '4px' }}>
-                          Secure Docs: <code>{t.verificationDocMasked || 'Govt ID Masked: ****-****-7102'}</code>
+                        <div style={{ fontSize: '12px', color: '#34D399', marginTop: '4px' }}>
+                          Secure Docs: <code style={{ color: '#6EE7B7' }}>{t.verificationDocMasked || 'Govt ID Masked: ****-****-7102'}</code>
                         </div>
                       </div>
 
@@ -259,7 +300,7 @@ export default function AdminDashboard() {
                         <button
                           onClick={() => updateTechnicianStatus(t.id, 'Rejected')}
                           className="btn btn-outline btn-sm"
-                          style={{ color: '#DC2626' }}
+                          style={{ color: '#F87171', borderColor: 'rgba(239, 68, 68, 0.3)' }}
                         >
                           <XCircle size={14} /> Reject Application
                         </button>
@@ -271,13 +312,13 @@ export default function AdminDashboard() {
             </div>
 
             {/* Pending Equipment Listings */}
-            <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', marginBottom: '14px' }}>
+            <div style={{ background: 'rgba(14, 19, 48, 0.85)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '24px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#FFFFFF', marginBottom: '14px' }}>
                 Equipment Listings Awaiting Moderation ({pendingEquipmentCount})
               </h3>
 
               {pendingEquipmentCount === 0 ? (
-                <div style={{ color: '#059669', fontSize: '13px', fontWeight: 600 }}>
+                <div style={{ color: '#34D399', fontSize: '13px', fontWeight: 600 }}>
                   ✓ All equipment listings reviewed and active!
                 </div>
               ) : (
@@ -291,22 +332,22 @@ export default function AdminDashboard() {
                         justifyContent: 'space-between',
                         padding: '16px',
                         borderRadius: '12px',
-                        border: '1px solid #E2E8F0',
-                        background: '#FFFFFF',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        background: 'rgba(255, 255, 255, 0.03)',
                         flexWrap: 'wrap',
                         gap: '12px'
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                        <div style={{ width: '54px', height: '54px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, background: '#F1F5F9' }}>
+                        <div style={{ width: '54px', height: '54px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, background: 'rgba(255, 255, 255, 0.06)' }}>
                           <EquipmentImage item={item} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                         <div>
-                          <div style={{ fontWeight: 800, fontSize: '14.5px', color: '#0F172A' }}>{item.title}</div>
-                          <div style={{ fontSize: '12px', color: '#64748B' }}>
+                          <div style={{ fontWeight: 800, fontSize: '14.5px', color: '#FFFFFF' }}>{item.title}</div>
+                          <div style={{ fontSize: '12px', color: '#94A3B8' }}>
                             {item.category} • ₹{item.dailyRate}/day • Deposit: ₹{item.securityDeposit}
                           </div>
-                          <div style={{ fontSize: '11.5px', color: '#475569' }}>
+                          <div style={{ fontSize: '11.5px', color: '#64748B' }}>
                             Owner: {item.owner.name} (Adyar, Chennai)
                           </div>
                         </div>
@@ -322,7 +363,7 @@ export default function AdminDashboard() {
                         <button
                           onClick={() => updateEquipmentStatus(item.id, 'Rejected')}
                           className="btn btn-outline btn-sm"
-                          style={{ color: '#DC2626' }}
+                          style={{ color: '#F87171', borderColor: 'rgba(239, 68, 68, 0.3)' }}
                         >
                           Reject
                         </button>
@@ -337,8 +378,8 @@ export default function AdminDashboard() {
 
         {/* SECTION: TECHNICIANS MANAGER */}
         {activeSection === 'technicians' && (
-          <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', marginBottom: '16px' }}>
+          <div style={{ background: 'rgba(14, 19, 48, 0.85)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '24px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#FFFFFF', marginBottom: '16px' }}>
               All Verified Technicians on Platform
             </h3>
 
@@ -352,15 +393,15 @@ export default function AdminDashboard() {
                     justifyContent: 'space-between',
                     padding: '14px 18px',
                     borderRadius: '10px',
-                    border: '1px solid #F1F5F9',
-                    background: '#FAFAFA'
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: 'rgba(255, 255, 255, 0.03)'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <img src={t.avatar} alt="" style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover' }} />
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '14px', color: '#0F172A' }}>{t.name}</div>
-                      <div style={{ fontSize: '12px', color: '#64748B' }}>{t.title} • {t.city}</div>
+                      <div style={{ fontWeight: 700, fontSize: '14px', color: '#FFFFFF' }}>{t.name}</div>
+                      <div style={{ fontSize: '12px', color: '#94A3B8' }}>{t.title} • {t.city}</div>
                     </div>
                   </div>
 
@@ -370,8 +411,9 @@ export default function AdminDashboard() {
                       fontWeight: 700,
                       padding: '3px 10px',
                       borderRadius: '999px',
-                      background: t.status === 'Approved' ? '#ECFDF5' : '#FEF3C7',
-                      color: t.status === 'Approved' ? '#059669' : '#B45309'
+                      background: t.status === 'Approved' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                      color: t.status === 'Approved' ? '#34D399' : '#FBBF24',
+                      border: t.status === 'Approved' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(245, 158, 11, 0.3)'
                     }}>
                       {t.status}
                     </span>
@@ -402,8 +444,8 @@ export default function AdminDashboard() {
 
         {/* SECTION: EQUIPMENT CATALOG */}
         {activeSection === 'equipment' && (
-          <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', marginBottom: '16px' }}>
+          <div style={{ background: 'rgba(14, 19, 48, 0.85)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '24px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#FFFFFF', marginBottom: '16px' }}>
               Full Equipment Catalog Moderation
             </h3>
 
@@ -417,17 +459,17 @@ export default function AdminDashboard() {
                     justifyContent: 'space-between',
                     padding: '12px 16px',
                     borderRadius: '10px',
-                    border: '1px solid #F1F5F9',
-                    background: '#FAFAFA'
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: 'rgba(255, 255, 255, 0.03)'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '6px', overflow: 'hidden', flexShrink: 0, background: '#F1F5F9' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '6px', overflow: 'hidden', flexShrink: 0, background: 'rgba(255, 255, 255, 0.06)' }}>
                       <EquipmentImage item={item} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '13.5px', color: '#0F172A' }}>{item.title}</div>
-                      <div style={{ fontSize: '11.5px', color: '#64748B' }}>₹{item.dailyRate}/day • {item.location}</div>
+                      <div style={{ fontWeight: 700, fontSize: '13.5px', color: '#FFFFFF' }}>{item.title}</div>
+                      <div style={{ fontSize: '11.5px', color: '#94A3B8' }}>₹{item.dailyRate}/day • {item.location}</div>
                     </div>
                   </div>
 
@@ -440,7 +482,7 @@ export default function AdminDashboard() {
                       <button
                         onClick={() => updateEquipmentStatus(item.id, 'Rejected')}
                         className="btn btn-ghost btn-sm"
-                        style={{ color: '#DC2626', fontSize: '11.5px' }}
+                        style={{ color: '#F87171', fontSize: '11.5px' }}
                       >
                         Delist Item
                       </button>
@@ -462,13 +504,13 @@ export default function AdminDashboard() {
 
         {/* SECTION: DISPUTES & COMPLAINTS */}
         {activeSection === 'disputes' && (
-          <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', marginBottom: '16px' }}>
+          <div style={{ background: 'rgba(14, 19, 48, 0.85)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '24px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#FFFFFF', marginBottom: '16px' }}>
               Dispute Resolution & Escrow Mediation Tickets
             </h3>
 
             {disputesList.length === 0 ? (
-              <div style={{ color: '#059669', fontSize: '13px' }}>✓ Zero open disputes currently.</div>
+              <div style={{ color: '#34D399', fontSize: '13px' }}>✓ Zero open disputes currently.</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {disputesList.map(disp => (
@@ -477,15 +519,15 @@ export default function AdminDashboard() {
                     style={{
                       padding: '16px',
                       borderRadius: '12px',
-                      border: '1px solid #FECACA',
-                      background: '#FEF2F2'
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      background: 'rgba(239, 68, 68, 0.08)'
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span style={{ fontWeight: 800, color: '#991B1B' }}>Ticket {disp.id} • Order {disp.rentalId}</span>
-                      <span style={{ fontWeight: 700, color: '#B91C1C' }}>{disp.claimAmount}</span>
+                      <span style={{ fontWeight: 800, color: '#FCA5A5' }}>Ticket {disp.id} • Order {disp.rentalId}</span>
+                      <span style={{ fontWeight: 700, color: '#F87171' }}>{disp.claimAmount}</span>
                     </div>
-                    <div style={{ fontSize: '13px', color: '#374151', marginBottom: '12px' }}>
+                    <div style={{ fontSize: '13px', color: '#E2E8F0', marginBottom: '12px' }}>
                       <strong>Claim:</strong> {disp.reason} (Reported by {disp.reportedBy})
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -511,14 +553,14 @@ export default function AdminDashboard() {
 
         {/* SECTION: USERS DIRECTORY */}
         {activeSection === 'users' && (
-          <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', marginBottom: '16px' }}>
+          <div style={{ background: 'rgba(14, 19, 48, 0.85)', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '24px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#FFFFFF', marginBottom: '16px' }}>
               User Moderation & Account Suspension Control
             </h3>
 
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
-                <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#475569', textAlign: 'left' }}>
+                <tr style={{ background: 'rgba(255, 255, 255, 0.04)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: '#94A3B8', textAlign: 'left' }}>
                   <th style={{ padding: '10px 12px' }}>User</th>
                   <th style={{ padding: '10px 12px' }}>Role</th>
                   <th style={{ padding: '10px 12px' }}>KYC Status</th>
@@ -528,12 +570,12 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {usersList.map(u => (
-                  <tr key={u.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                  <tr key={u.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
                     <td style={{ padding: '10px 12px' }}>
-                      <div style={{ fontWeight: 700, color: '#0F172A' }}>{u.name}</div>
-                      <div style={{ fontSize: '11px', color: '#64748B' }}>{u.email}</div>
+                      <div style={{ fontWeight: 700, color: '#FFFFFF' }}>{u.name}</div>
+                      <div style={{ fontSize: '11px', color: '#94A3B8' }}>{u.email}</div>
                     </td>
-                    <td style={{ padding: '10px 12px', color: '#334155' }}>{u.role}</td>
+                    <td style={{ padding: '10px 12px', color: '#E2E8F0' }}>{u.role}</td>
                     <td style={{ padding: '10px 12px' }}>
                       <span className={u.kyc === 'Verified' ? 'badge badge-green' : 'badge badge-orange'}>
                         {u.kyc}
@@ -541,7 +583,7 @@ export default function AdminDashboard() {
                     </td>
                     <td style={{ padding: '10px 12px' }}>
                       <span style={{
-                        color: u.status === 'Active' ? '#059669' : '#DC2626',
+                        color: u.status === 'Active' ? '#34D399' : '#F87171',
                         fontWeight: 700,
                         fontSize: '12px'
                       }}>
@@ -552,7 +594,7 @@ export default function AdminDashboard() {
                       <button
                         onClick={() => handleSuspendUser(u.id)}
                         className="btn btn-outline btn-sm"
-                        style={{ color: u.status === 'Suspended' ? '#059669' : '#DC2626' }}
+                        style={{ color: u.status === 'Suspended' ? '#34D399' : '#F87171', borderColor: u.status === 'Suspended' ? 'rgba(52, 211, 153, 0.3)' : 'rgba(239, 68, 68, 0.3)' }}
                       >
                         {u.status === 'Suspended' ? 'Unsuspend' : 'Suspend User'}
                       </button>

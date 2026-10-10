@@ -21,14 +21,14 @@ export default function RepairBookingModal() {
   const initialTech = modalState.repairRequest?.initialTech || null;
 
   const [deviceType, setDeviceType] = useState('Laptop');
-  const [deviceBrand, setDeviceBrand] = useState('Apple');
-  const [deviceModel, setDeviceModel] = useState('MacBook Pro 14" M1 (2021)');
+  const [deviceBrand, setDeviceBrand] = useState('');
+  const [deviceModel, setDeviceModel] = useState('');
   const [category, setCategory] = useState(initialCat);
-  const [issueSummary, setIssueSummary] = useState('Liquid spill near trackpad, system does not boot and charger light stays amber.');
-  const [preferredLocation, setPreferredLocation] = useState('At Home Service');
-  const [preferredDate, setPreferredDate] = useState('2026-10-14');
-  const [timeSlot, setTimeSlot] = useState('11:00 AM - 01:00 PM');
-  const [address, setAddress] = useState('Flat 4B, Shanthi Heights, T. Nagar, Chennai');
+  const [issueSummary, setIssueSummary] = useState('');
+  const [preferredLocation, setPreferredLocation] = useState('Doorstep Service');
+  const [preferredDate, setPreferredDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [timeSlot, setTimeSlot] = useState('10:00 AM - 12:00 PM');
+  const [address, setAddress] = useState('');
   const [submittedBooking, setSubmittedBooking] = useState(null);
 
   if (!modalState.repairRequest?.open) return null;
@@ -63,19 +63,25 @@ export default function RepairBookingModal() {
       <div
         className="modal-content"
         onClick={e => e.stopPropagation()}
-        style={{ padding: '28px', maxWidth: '620px' }}
+        style={{
+          padding: '28px',
+          maxWidth: '620px',
+          background: '#0E1330',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 24px 64px -16px rgba(0, 0, 0, 0.7)'
+        }}
       >
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-orange-dark)', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: '#F97316', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               SERVICE REQUEST INTAKE
             </div>
-            <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0F172A' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF' }}>
               {submittedBooking ? 'Repair Request Confirmed' : 'Request Certified Technician'}
             </h3>
           </div>
-          <button onClick={() => closeModal('repairRequest')} style={{ color: '#64748B' }}>
+          <button onClick={() => closeModal('repairRequest')} style={{ color: '#94A3B8', background: 'none', border: 'none', cursor: 'pointer' }}>
             <X size={20} />
           </button>
         </div>
@@ -87,40 +93,41 @@ export default function RepairBookingModal() {
               width: '64px',
               height: '64px',
               borderRadius: '50%',
-              background: '#FFF4EB',
+              background: 'rgba(249, 115, 22, 0.15)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 16px',
-              border: '2px solid #FF6B00'
+              border: '2px solid #F97316',
+              boxShadow: '0 0 25px rgba(249, 115, 22, 0.35)'
             }}>
-              <CheckCircle size={36} color="#EA580C" />
+              <CheckCircle size={36} color="#F97316" />
             </div>
 
-            <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#0F172A', marginBottom: '8px' }}>
+            <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#FFFFFF', marginBottom: '8px' }}>
               Repair Ticket #{submittedBooking.id} Created
             </h3>
 
-            <p style={{ fontSize: '14px', color: '#64748B', marginBottom: '20px' }}>
-              Status: <span style={{ color: '#EA580C', fontWeight: 700 }}>
+            <p style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '20px' }}>
+              Status: <span style={{ color: '#FB923C', fontWeight: 700 }}>
                 {submittedBooking.status}
               </span>
             </p>
 
             <div style={{
-              background: '#F8FAFC',
+              background: 'rgba(255, 255, 255, 0.03)',
               borderRadius: '12px',
-              border: '1px solid #E2E8F0',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
               padding: '16px',
               textAlign: 'left',
               fontSize: '13px',
               marginBottom: '24px'
             }}>
-              <div style={{ marginBottom: '6px' }}><strong>Device:</strong> {deviceBrand} {deviceModel}</div>
-              <div style={{ marginBottom: '6px' }}><strong>Service Slot:</strong> {preferredDate} ({timeSlot})</div>
-              <div style={{ marginBottom: '6px' }}><strong>Location:</strong> {preferredLocation}</div>
+              <div style={{ marginBottom: '6px' }}><strong style={{ color: '#FFFFFF' }}>Device:</strong> <span style={{ color: '#CBD5E1' }}>{deviceBrand} {deviceModel}</span></div>
+              <div style={{ marginBottom: '6px' }}><strong style={{ color: '#FFFFFF' }}>Service Slot:</strong> <span style={{ color: '#CBD5E1' }}>{preferredDate} ({timeSlot})</span></div>
+              <div style={{ marginBottom: '6px' }}><strong style={{ color: '#FFFFFF' }}>Location:</strong> <span style={{ color: '#CBD5E1' }}>{preferredLocation}</span></div>
               {initialTech && (
-                <div><strong>Assigned Tech:</strong> {initialTech.name} ({initialTech.title})</div>
+                <div><strong style={{ color: '#FFFFFF' }}>Assigned Tech:</strong> <span style={{ color: '#CBD5E1' }}>{initialTech.name} ({initialTech.title})</span></div>
               )}
             </div>
 
@@ -154,15 +161,15 @@ export default function RepairBookingModal() {
                 alignItems: 'center',
                 gap: '12px',
                 padding: '10px 14px',
-                background: '#FFF4EB',
+                background: 'rgba(249, 115, 22, 0.12)',
                 borderRadius: '10px',
-                border: '1px solid #FED7AA',
+                border: '1px solid rgba(249, 115, 22, 0.3)',
                 marginBottom: '16px'
               }}>
                 <img src={initialTech.avatar} alt="tech" style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover' }} />
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#9A3412' }}>Booking with: {initialTech.name}</div>
-                  <div style={{ fontSize: '11.5px', color: '#C2410C' }}>{initialTech.title}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#FB923C' }}>Booking with: {initialTech.name}</div>
+                  <div style={{ fontSize: '11.5px', color: '#FDBA74' }}>{initialTech.title}</div>
                 </div>
               </div>
             )}
@@ -175,13 +182,13 @@ export default function RepairBookingModal() {
                   onChange={e => setDeviceType(e.target.value)}
                   className="form-select"
                 >
-                  <option value="Laptop">Laptop / MacBook</option>
-                  <option value="Smartphone">Smartphone / iPhone</option>
-                  <option value="Tablet">Tablet / iPad</option>
-                  <option value="PC">PC / Desktop</option>
-                  <option value="Camera">Camera / Optical</option>
-                  <option value="Electronics">Lab / Electronics</option>
-                  <option value="CCTV">CCTV / Networking</option>
+                  <option value="Laptop" style={{ background: '#0E1330', color: '#FFF' }}>Laptop / MacBook</option>
+                  <option value="Smartphone" style={{ background: '#0E1330', color: '#FFF' }}>Smartphone / iPhone</option>
+                  <option value="Tablet" style={{ background: '#0E1330', color: '#FFF' }}>Tablet / iPad</option>
+                  <option value="PC" style={{ background: '#0E1330', color: '#FFF' }}>PC / Desktop</option>
+                  <option value="Camera" style={{ background: '#0E1330', color: '#FFF' }}>Camera / Optical</option>
+                  <option value="Electronics" style={{ background: '#0E1330', color: '#FFF' }}>Lab / Electronics</option>
+                  <option value="CCTV" style={{ background: '#0E1330', color: '#FFF' }}>CCTV / Networking</option>
                 </select>
               </div>
 
@@ -235,10 +242,12 @@ export default function RepairBookingModal() {
                       borderRadius: '8px',
                       fontSize: '12.5px',
                       fontWeight: 600,
-                      background: preferredLocation === loc ? '#FFF4EB' : '#FFFFFF',
-                      color: preferredLocation === loc ? '#EA580C' : '#334155',
-                      border: preferredLocation === loc ? '1.5px solid #FF6B00' : '1px solid #CBD5E1',
-                      textAlign: 'center'
+                      background: preferredLocation === loc ? 'rgba(249, 115, 22, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                      color: preferredLocation === loc ? '#FB923C' : '#94A3B8',
+                      border: preferredLocation === loc ? '1.5px solid #F97316' : '1px solid rgba(255, 255, 255, 0.08)',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
                     }}
                   >
                     {loc}
@@ -279,10 +288,10 @@ export default function RepairBookingModal() {
                   onChange={e => setTimeSlot(e.target.value)}
                   className="form-select"
                 >
-                  <option value="09:00 AM - 11:00 AM">09:00 AM - 11:00 AM</option>
-                  <option value="11:00 AM - 01:00 PM">11:00 AM - 01:00 PM</option>
-                  <option value="02:00 PM - 04:00 PM">02:00 PM - 04:00 PM</option>
-                  <option value="04:00 PM - 06:00 PM">04:00 PM - 06:00 PM</option>
+                  <option value="09:00 AM - 11:00 AM" style={{ background: '#0E1330', color: '#FFF' }}>09:00 AM - 11:00 AM</option>
+                  <option value="11:00 AM - 01:00 PM" style={{ background: '#0E1330', color: '#FFF' }}>11:00 AM - 01:00 PM</option>
+                  <option value="02:00 PM - 04:00 PM" style={{ background: '#0E1330', color: '#FFF' }}>02:00 PM - 04:00 PM</option>
+                  <option value="04:00 PM - 06:00 PM" style={{ background: '#0E1330', color: '#FFF' }}>04:00 PM - 06:00 PM</option>
                 </select>
               </div>
             </div>

@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Renty Pack — Rent any gadget. Fix any device.</title>
+  <meta name="description" content="Renty Pack is the trusted peer-to-peer electronics marketplace to rent gadgets and book certified device repair technicians." />
+  
+  <!-- Google Fonts: Poppins (headings) + Inter (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              blue: '#2563EB',
+              'blue-hover': '#1D4ED8',
+              teal: '#14B8A6',
+              'teal-dark': '#0D9488',
+              orange: '#F97316',
+              'orange-hover': '#EA580C'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['Poppins', 'sans-serif']
+          },
+          borderRadius: {
+            '16': '16px',
+            '2xl': '16px'
+          },
+          boxShadow: {
+            'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04)',
+            'soft-lg': '0 12px 30px -4px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Custom utility styles */
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    h1, h2, h3, h4, h5, h6, .font-heading {
+      font-family: 'Poppins', sans-serif;
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .skeleton {
+      background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200 antialiased pb-20 md:pb-0">
+
+  <!-- ========================================================= -->
+  <!-- 1. NAVBAR                                                 -->
+  <!-- ========================================================= -->
+  <header class="sticky top-0 z-40 w-full backdrop-blur-md bg-white/90 dark:bg-slate-900/90 border-b border-gray-100 dark:border-slate-800 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-2.5 group">
+        <div class="w-11 h-11 rounded-16 bg-gradient-to-tr from-brand-blue to-brand-teal flex items-center justify-center text-white shadow-md shadow-brand-blue/20 group-hover:scale-105 transition-transform">
+          <i data-lucide="layers" class="w-6 h-6"></i>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-2xl font-bold font-heading tracking-tight text-slate-900 dark:text-white flex items-center gap-1">
+            Renty<span class="text-brand-blue">Pack</span>
+          </span>
+          <span class="text-[10px] tracking-wider uppercase font-semibold text-brand-teal -mt-1">P2P Gear & Repairs</span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation Links -->
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
+        <a href="#rent-section" class="text-slate-600 dark:text-slate-300 hover:text-brand-blue dark:hover:text-brand-blue transition-colors flex items-center gap-1.5">
+          <i data-lucide="package" class="w-4 h-4 text-brand-blue"></i> Rent
+        </a>
+        <a href="#repair-section" class="text-slate-600 dark:text-slate-300 hover:text-brand-teal dark:hover:text-brand-teal transition-colors flex items-center gap-1.5">
+          <i data-lucide="wrench" class="w-4 h-4 text-brand-teal"></i> Repair
+        </a>
+        <a href="#how-it-works" class="text-slate-600 dark:text-slate-300 hover:text-brand-blue dark:hover:text-brand-blue transition-colors">
+          How It Works
+        </a>
+        <a href="#reviews" class="text-slate-600 dark:text-slate-300 hover:text-brand-blue dark:hover:text-brand-blue transition-colors">
+          Reviews
+        </a>
+      </nav>
+
+      <!-- Action Buttons & Dark Mode Toggle -->
+      <div class="flex items-center gap-3">
+        <!-- Dark Mode Toggle Button -->
+        <button id="theme-toggle" class="p-2.5 rounded-16 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors" title="Toggle Theme">
+          <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
+          <i data-lucide="sun" class="w-5 h-5 block dark:hidden"></i>
+        </button>
+
+        <!-- Login Button -->
+        <button onclick="openAuthModal()" class="hidden sm:inline-flex items-center text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-brand-blue px-3.5 py-2">
+          Login
+        </button>
+
+        <!-- CTA "List Your Gadget" Button -->
+        <a href="#list-modal" onclick="openListModal(event)" class="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-white text-sm font-semibold px-4 sm:px-5 py-2.5 rounded-16 shadow-md shadow-brand-orange/20 hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i>
+          <span>List Your Gadget</span>
+        </a>
+
+        <!-- Mobile Menu Toggle Button -->
+        <button id="mobile-menu-btn" class="md:hidden p-2 rounded-16 bg-gray-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Menu -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-3 pb-5 space-y-3">
+      <a href="#rent-section" class="flex items-center gap-3 py-2 text-base font-medium text-slate-700 dark:text-slate-200">
+        <i data-lucide="package" class="w-5 h-5 text-brand-blue"></i> Rent Gadgets
+      </a>
+      <a href="#repair-section" class="flex items-center gap-3 py-2 text-base font-medium text-slate-700 dark:text-slate-200">
+        <i data-lucide="wrench" class="w-5 h-5 text-brand-teal"></i> Device Repairs
+      </a>
+      <a href="#how-it-works" class="flex items-center gap-3 py-2 text-base font-medium text-slate-700 dark:text-slate-200">
+        <i data-lucide="help-circle" class="w-5 h-5 text-slate-400"></i> How It Works
+      </a>
+      <div class="pt-2 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between">
+        <button onclick="openAuthModal()" class="text-sm font-semibold text-brand-blue">
+          Sign In / Create Account
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================= -->
+  <!-- 2. HERO SECTION                                           -->
+  <!-- ========================================================= -->
+  <section class="relative overflow-hidden pt-10 pb-16 md:pt-16 md:pb-24">
+    <!-- Ambient background glows -->
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-blue/10 dark:bg-brand-blue/20 rounded-full blur-3xl -z-10"></div>
+    <div class="absolute top-1/3 right-10 w-80 h-80 bg-brand-teal/10 dark:bg-brand-teal/20 rounded-full blur-3xl -z-10"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <!-- Badge -->
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-brand-blue dark:text-blue-300 text-xs font-semibold uppercase tracking-wider mb-6 shadow-sm">
+        <span class="w-2 h-2 rounded-full bg-brand-teal animate-pulse"></span>
+        Zero Hassle • Escrow Protection • 30-Day Repair Warranty
+      </div>
+
+      <!-- Main Headline -->
+      <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold font-heading text-slate-900 dark:text-white tracking-tight leading-tight max-w-4xl mx-auto mb-6">
+        Rent any gadget. <br class="hidden sm:inline" />
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue via-brand-teal to-brand-blue">Fix any device.</span>
+      </h1>
+
+      <!-- Short Subtext -->
+      <p class="text-lg sm:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
+        The friendly peer-to-peer electronics marketplace. Rent top-tier cameras, drones, and consoles from verified owners, or get fast repairs from certified technicians.
+      </p>
+
+      <!-- Search Bar (Gadget, Location, Dates) -->
+      <div class="max-w-4xl mx-auto bg-white dark:bg-slate-800 rounded-16 p-3 sm:p-4 shadow-soft-lg border border-gray-200/80 dark:border-slate-700/80 mb-8 transition-all">
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-2 items-center">
+          
+          <!-- Gadget Input -->
+          <div class="sm:col-span-4 flex items-center gap-3 px-3.5 py-2.5 rounded-16 bg-gray-50 dark:bg-slate-700/50 border border-transparent focus-within:border-brand-blue transition-colors text-left">
+            <i data-lucide="search" class="w-5 h-5 text-slate-400 shrink-0"></i>
+            <div class="w-full">
+              <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider">Gadget or Service</label>
+              <input type="text" id="search-input" placeholder="e.g. Sony A7 IV, MacBook M3" class="w-full bg-transparent border-none p-0 text-sm font-medium text-slate-800 dark:text-white focus:outline-none placeholder-slate-400" />
+            </div>
+          </div>
+
+          <!-- Location Selector -->
+          <div class="sm:col-span-3 flex items-center gap-3 px-3.5 py-2.5 rounded-16 bg-gray-50 dark:bg-slate-700/50 border border-transparent focus-within:border-brand-blue transition-colors text-left">
+            <i data-lucide="map-pin" class="w-5 h-5 text-brand-teal shrink-0"></i>
+            <div class="w-full">
+              <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider">Location</label>
+              <select id="location-select" class="w-full bg-transparent border-none p-0 text-sm font-medium text-slate-800 dark:text-white focus:outline-none">
+                <option value="all">All Locations</option>
+                <option value="bangalore">Bangalore</option>
+                <option value="mumbai">Mumbai</option>
+                <option value="delhi">Delhi NCR</option>
+                <option value="hyderabad">Hyderabad</option>
+                <option value="chennai">Chennai</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Dates Selector -->
+          <div class="sm:col-span-3 flex items-center gap-3 px-3.5 py-2.5 rounded-16 bg-gray-50 dark:bg-slate-700/50 border border-transparent focus-within:border-brand-blue transition-colors text-left">
+            <i data-lucide="calendar" class="w-5 h-5 text-brand-blue shrink-0"></i>
+            <div class="w-full">
+              <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider">Dates / Timeline</label>
+              <input type="text" placeholder="Pick rental dates" class="w-full bg-transparent border-none p-0 text-sm font-medium text-slate-800 dark:text-white focus:outline-none placeholder-slate-400" onfocus="(this.type='date')" />
+            </div>
+          </div>
+
+          <!-- Search Button -->
+          <div class="sm:col-span-2">
+            <button onclick="handleSearch()" class="w-full bg-brand-blue hover:bg-brand-blue-hover text-white font-semibold py-3 px-4 rounded-16 shadow-md shadow-brand-blue/25 hover:shadow-lg transition-all flex items-center justify-center gap-2">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+              <span>Explore</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Two Quick Navigation Action Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <a href="#rent-section" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-16 bg-brand-blue text-white font-semibold shadow-soft hover:bg-brand-blue-hover hover:shadow-lg transition-all">
+          <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+          <span>Rent a Gadget</span>
+        </a>
+        <a href="#repair-section" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-16 bg-white dark:bg-slate-800 text-slate-800 dark:text-white border border-gray-200 dark:border-slate-700 font-semibold shadow-soft hover:border-brand-teal hover:text-brand-teal transition-all">
+          <i data-lucide="wrench" class="w-5 h-5 text-brand-teal"></i>
+          <span>Get a Repair</span>
+        </a>
+      </div>
+
+      <!-- Trust Mini Banner -->
+      <div class="mt-12 flex flex-wrap items-center justify-center gap-8 text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <div class="flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
+          <span>Verified Government ID</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="lock" class="w-4 h-4 text-brand-blue"></i>
+          <span>Escrow Protected Deposits</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check-circle-2" class="w-4 h-4 text-brand-teal"></i>
+          <span>30-Day Repair Guarantee</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- 3. CATEGORIES SECTION                                     -->
+  <!-- ========================================================= -->
+  <section class="py-12 bg-white dark:bg-slate-800/50 border-y border-gray-100 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-bold font-heading text-slate-900 dark:text-white">
+            Explore by Category
+          </h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Browse our verified peer-to-peer electronics catalog</p>
+        </div>
+        <a href="#rent-section" class="text-sm font-semibold text-brand-blue hover:underline flex items-center gap-1">
+          View all <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
+      </div>
+
+      <!-- Categories Grid (7 cards) -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+        
+        <!-- 1. Cameras -->
+        <button onclick="filterCategory('Cameras')" class="category-card group p-4 rounded-16 bg-gray-50 dark:bg-slate-800 border border-gray-200/60 dark:border-slate-700 hover:border-brand-blue dark:hover:border-brand-blue hover:shadow-soft transition-all text-center flex flex-col items-center">
+          <div class="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/40 text-brand-blue flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <i data-lucide="camera" class="w-7 h-7"></i>
+          </div>
+          <span class="font-heading font-semibold text-sm text-slate-800 dark:text-white">Cameras</span>
+          <span class="text-xs text-slate-400 mt-0.5">85+ listed</span>
+        </button>
+
+        <!-- 2. Laptops -->
+        <button onclick="filterCategory('Laptops')" class="category-card group p-4 rounded-16 bg-gray-50 dark:bg-slate-800 border border-gray-200/60 dark:border-slate-700 hover:border-brand-blue dark:hover:border-brand-blue hover:shadow-soft transition-all text-center flex flex-col items-center">
+          <div class="w-14 h-14 rounded-full bg-teal-100 dark:bg-teal-900/40 text-brand-teal flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <i data-lucide="laptop" class="w-7 h-7"></i>
+          </div>
+          <span class="font-heading font-semibold text-sm text-slate-800 dark:text-white">Laptops</span>
+          <span class="text-xs text-slate-400 mt-0.5">120+ listed</span>
+        </button>
+
+        <!-- 3. Drones -->
+        <button onclick="filterCategory('Drones')" class="category-card group p-4 rounded-16 bg-gray-50 dark:bg-slate-800 border border-gray-200/60 dark:border-slate-700 hover:border-brand-blue dark:hover:border-brand-blue hover:shadow-soft transition-all text-center flex flex-col items-center">
+          <div class="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <i data-lucide="navigation" class="w-7 h-7"></i>
+          </div>
+          <span class="font-heading font-semibold text-sm text-slate-800 dark:text-white">Drones</span>
+          <span class="text-xs text-slate-400 mt-0.5">42+ listed</span>
+        </button>
+
+        <!-- 4. Gaming Consoles -->
+        <button onclick="filterCategory('Gaming Consoles')" class="category-card group p-4 rounded-16 bg-gray-50 dark:bg-slate-800 border border-gray-200/60 dark:border-slate-700 hover:border-brand-blue dark:hover:border-brand-blue hover:shadow-soft transition-all text-center flex flex-col items-center">
+          <div class="w-14 h-14 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <i data-lucide="gamepad-2" class="w-7 h-7"></i>
+          </div>
+          <span class="font-heading font-semibold text-sm text-slate-800 dark:text-white">Gaming</span>
+          <span class="text-xs text-slate-400 mt-0.5">64+ listed</span>
+        </button>
+
+        <!-- 5. Projectors -->
+        <button onclick="filterCategory('Projectors')" class="category-card group p-4 rounded-16 bg-gray-50 dark:bg-slate-800 border border-gray-200/60 dark:border-slate-700 hover:border-brand-blue dark:hover:border-brand-blue hover:shadow-soft transition-all text-center flex flex-col items-center">
+          <div class="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <i data-lucide="projector" class="w-7 h-7"></i>
+          </div>
+          <span class="font-heading font-semibold text-sm text-slate-800 dark:text-white">Projectors</span>
+          <span class="text-xs text-slate-400 mt-0.5">38+ listed</span>
+        </button>
+
+        <!-- 6. Audio Gear -->
+        <button onclick="filterCategory('Audio Gear')" class="category-card group p-4 rounded-16 bg-gray-50 dark:bg-slate-800 border border-gray-200/60 dark:border-slate-700 hover:border-brand-blue dark:hover:border-brand-blue hover:shadow-soft transition-all text-center flex flex-col items-center">
+          <div class="w-14 h-14 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <i data-lucide="headphones" class="w-7 h-7"></i>
+          </div>
+          <span class="font-heading font-semibold text-sm text-slate-800 dark:text-white">Audio Gear</span>
+          <span class="text-xs text-slate-400 mt-0.5">90+ listed</span>
+        </button>
+
+        <!-- 7. Phones -->
+        <button onclick="filterCategory('Phones')" class="category-card group p-4 rounded-16 bg-gray-50 dark:bg-slate-800 border border-gray-200/60 dark:border-slate-700 hover:border-brand-blue dark:hover:border-brand-blue hover:shadow-soft transition-all text-center flex flex-col items-center">
+          <div class="w-14 h-14 rounded-full bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <i data-lucide="smartphone" class="w-7 h-7"></i>
+          </div>
+          <span class="font-heading font-semibold text-sm text-slate-800 dark:text-white">Phones</span>
+          <span class="text-xs text-slate-400 mt-0.5">70+ listed</span>
+        </button>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- 4. FEATURED GADGETS MARKETPLACE                           -->
+  <!-- ========================================================= -->
+  <section id="rent-section" class="py-16 md:py-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Section Header -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 text-brand-blue text-xs font-bold uppercase tracking-wider mb-2">
+            <i data-lucide="sparkles" class="w-4 h-4"></i> High Demand Rentals
+          </div>
+          <h2 class="text-3xl font-extrabold font-heading text-slate-900 dark:text-white">
+            Featured Electronics to Rent
+          </h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Verified equipment with escrow deposits and damage coverage</p>
+        </div>
+
+        <!-- Skeleton Toggle Button Demo -->
+        <button onclick="toggleSkeleton()" class="self-start md:self-auto text-xs font-semibold px-3 py-1.5 rounded-16 bg-gray-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-gray-300 flex items-center gap-1.5">
+          <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+          <span id="skeleton-label">Demo Skeleton Loader</span>
+        </button>
+      </div>
+
+      <!-- Filters Bar (Category, Price, Location, Rating, Availability) -->
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-16 shadow-soft border border-gray-100 dark:border-slate-700/80 mb-8">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          
+          <!-- Category Pills -->
+          <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 max-w-full">
+            <button onclick="filterCategory('All')" class="filter-pill active px-3.5 py-1.5 rounded-full text-xs font-semibold bg-brand-blue text-white transition-colors shrink-0">
+              All
+            </button>
+            <button onclick="filterCategory('Cameras')" class="filter-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-gray-200 transition-colors shrink-0">
+              Cameras
+            </button>
+            <button onclick="filterCategory('Laptops')" class="filter-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-gray-200 transition-colors shrink-0">
+              Laptops
+            </button>
+            <button onclick="filterCategory('Drones')" class="filter-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-gray-200 transition-colors shrink-0">
+              Drones
+            </button>
+            <button onclick="filterCategory('Gaming Consoles')" class="filter-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-gray-200 transition-colors shrink-0">
+              Gaming
+            </button>
+            <button onclick="filterCategory('Audio Gear')" class="filter-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-gray-200 transition-colors shrink-0">
+              Audio
+            </button>
+          </div>
+
+          <!-- Price & Availability Filters -->
+          <div class="flex flex-wrap items-center gap-4 text-xs font-medium">
+            <!-- Price selector -->
+            <div class="flex items-center gap-1.5">
+              <span class="text-slate-400">Max Price:</span>
+              <select id="price-filter" onchange="applyFilters()" class="bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1 text-slate-800 dark:text-white">
+                <option value="all">Any Price</option>
+                <option value="500">Under ₹500/day</option>
+                <option value="1500">Under ₹1,500/day</option>
+                <option value="3000">Under ₹3,000/day</option>
+              </select>
+            </div>
+
+            <!-- Availability toggle -->
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="avail-filter" onchange="applyFilters()" class="rounded text-brand-blue focus:ring-brand-blue" />
+              <span class="text-slate-600 dark:text-slate-300">Available Today</span>
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SKELETON LOADER CONTAINER (Hidden by default) -->
+      <div id="skeleton-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- 4 Skeletons -->
+        <div class="bg-white dark:bg-slate-800 rounded-16 p-4 shadow-soft border border-gray-100 dark:border-slate-700 space-y-3">
+          <div class="w-full h-48 rounded-16 skeleton"></div>
+          <div class="w-3/4 h-5 rounded skeleton"></div>
+          <div class="w-1/2 h-4 rounded skeleton"></div>
+          <div class="flex justify-between pt-2">
+            <div class="w-1/3 h-6 rounded skeleton"></div>
+            <div class="w-1/4 h-6 rounded skeleton"></div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-16 p-4 shadow-soft border border-gray-100 dark:border-slate-700 space-y-3">
+          <div class="w-full h-48 rounded-16 skeleton"></div>
+          <div class="w-3/4 h-5 rounded skeleton"></div>
+          <div class="w-1/2 h-4 rounded skeleton"></div>
+          <div class="flex justify-between pt-2">
+            <div class="w-1/3 h-6 rounded skeleton"></div>
+            <div class="w-1/4 h-6 rounded skeleton"></div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-16 p-4 shadow-soft border border-gray-100 dark:border-slate-700 space-y-3">
+          <div class="w-full h-48 rounded-16 skeleton"></div>
+          <div class="w-3/4 h-5 rounded skeleton"></div>
+          <div class="w-1/2 h-4 rounded skeleton"></div>
+          <div class="flex justify-between pt-2">
+            <div class="w-1/3 h-6 rounded skeleton"></div>
+            <div class="w-1/4 h-6 rounded skeleton"></div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-16 p-4 shadow-soft border border-gray-100 dark:border-slate-700 space-y-3">
+          <div class="w-full h-48 rounded-16 skeleton"></div>
+          <div class="w-3/4 h-5 rounded skeleton"></div>
+          <div class="w-1/2 h-4 rounded skeleton"></div>
+          <div class="flex justify-between pt-2">
+            <div class="w-1/3 h-6 rounded skeleton"></div>
+            <div class="w-1/4 h-6 rounded skeleton"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTUAL GADGETS GRID -->
+      <div id="gadgets-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        <!-- Card 1: Sony A7 IV Camera -->
+        <div class="gadget-card bg-white dark:bg-slate-800 rounded-16 overflow-hidden shadow-soft hover:shadow-soft-lg border border-gray-100 dark:border-slate-700 transition-all flex flex-col group" data-category="Cameras" data-price="1800">
+          <div class="relative h-48 w-full overflow-hidden bg-slate-100 dark:bg-slate-700">
+            <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=700&q=80" alt="Sony Alpha A7 IV" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <div class="absolute top-3 left-3 bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 shadow-sm">
+              <i data-lucide="badge-check" class="w-3.5 h-3.5"></i> Verified Owner
+            </div>
+            <div class="absolute top-3 right-3 bg-slate-900/80 text-white text-xs px-2 py-0.5 rounded-md font-semibold">
+              Cameras
+            </div>
+          </div>
+
+          <div class="p-4 flex-1 flex flex-col">
+            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
+              <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-teal"></i> Indiranagar, Bangalore</span>
+              <span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="star" class="w-3.5 h-3.5 fill-amber-500"></i> 4.9 (42)</span>
+            </div>
+
+            <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white mb-1 group-hover:text-brand-blue transition-colors">
+              Sony Alpha A7 IV Mirrorless + 28-70mm Lens
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">
+              4K 60p full-frame mirrorless camera, ideal for cinematic shoots and portrait photography. Comes with 2 batteries.
+            </p>
+
+            <div class="mt-auto pt-3 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
+              <div>
+                <span class="text-xs text-slate-400">Rental rate</span>
+                <div class="text-lg font-extrabold text-brand-blue font-heading">
+                  ₹1,800 <span class="text-xs font-normal text-slate-500">/ day</span>
+                </div>
+              </div>
+              <button onclick="openListingModal(1)" class="bg-brand-blue hover:bg-brand-blue-hover text-white text-xs font-semibold px-4 py-2 rounded-16 transition-colors shadow-sm">
+                View & Rent
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: DJI Mini 4 Pro Drone -->
+        <div class="gadget-card bg-white dark:bg-slate-800 rounded-16 overflow-hidden shadow-soft hover:shadow-soft-lg border border-gray-100 dark:border-slate-700 transition-all flex flex-col group" data-category="Drones" data-price="1400">
+          <div class="relative h-48 w-full overflow-hidden bg-slate-100 dark:bg-slate-700">
+            <img src="https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=700&q=80" alt="DJI Mini 4 Pro" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <div class="absolute top-3 left-3 bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 shadow-sm">
+              <i data-lucide="badge-check" class="w-3.5 h-3.5"></i> Verified Owner
+            </div>
+            <div class="absolute top-3 right-3 bg-slate-900/80 text-white text-xs px-2 py-0.5 rounded-md font-semibold">
+              Drones
+            </div>
+          </div>
+
+          <div class="p-4 flex-1 flex flex-col">
+            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
+              <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-teal"></i> Bandra, Mumbai</span>
+              <span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="star" class="w-3.5 h-3.5 fill-amber-500"></i> 4.95 (58)</span>
+            </div>
+
+            <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white mb-1 group-hover:text-brand-blue transition-colors">
+              DJI Mini 4 Pro Fly More Combo (4K HDR)
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">
+              Under 249g compact drone with omnidirectional obstacle sensing and 34-min flight battery pack.
+            </p>
+
+            <div class="mt-auto pt-3 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
+              <div>
+                <span class="text-xs text-slate-400">Rental rate</span>
+                <div class="text-lg font-extrabold text-brand-blue font-heading">
+                  ₹1,400 <span class="text-xs font-normal text-slate-500">/ day</span>
+                </div>
+              </div>
+              <button onclick="openListingModal(2)" class="bg-brand-blue hover:bg-brand-blue-hover text-white text-xs font-semibold px-4 py-2 rounded-16 transition-colors shadow-sm">
+                View & Rent
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: MacBook Pro M3 Max -->
+        <div class="gadget-card bg-white dark:bg-slate-800 rounded-16 overflow-hidden shadow-soft hover:shadow-soft-lg border border-gray-100 dark:border-slate-700 transition-all flex flex-col group" data-category="Laptops" data-price="2500">
+          <div class="relative h-48 w-full overflow-hidden bg-slate-100 dark:bg-slate-700">
+            <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=700&q=80" alt="MacBook Pro M3 Max" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <div class="absolute top-3 left-3 bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 shadow-sm">
+              <i data-lucide="badge-check" class="w-3.5 h-3.5"></i> Verified Owner
+            </div>
+            <div class="absolute top-3 right-3 bg-slate-900/80 text-white text-xs px-2 py-0.5 rounded-md font-semibold">
+              Laptops
+            </div>
+          </div>
+
+          <div class="p-4 flex-1 flex flex-col">
+            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
+              <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-teal"></i> Hitec City, Hyderabad</span>
+              <span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="star" class="w-3.5 h-3.5 fill-amber-500"></i> 4.88 (31)</span>
+            </div>
+
+            <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white mb-1 group-hover:text-brand-blue transition-colors">
+              Apple MacBook Pro 16" (M3 Max, 36GB RAM)
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">
+              Ultimate workstation for software compiling, 3D rendering, and 8K ProRes video editing on the go.
+            </p>
+
+            <div class="mt-auto pt-3 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
+              <div>
+                <span class="text-xs text-slate-400">Rental rate</span>
+                <div class="text-lg font-extrabold text-brand-blue font-heading">
+                  ₹2,500 <span class="text-xs font-normal text-slate-500">/ day</span>
+                </div>
+              </div>
+              <button onclick="openListingModal(3)" class="bg-brand-blue hover:bg-brand-blue-hover text-white text-xs font-semibold px-4 py-2 rounded-16 transition-colors shadow-sm">
+                View & Rent
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: PlayStation 5 Slim -->
+        <div class="gadget-card bg-white dark:bg-slate-800 rounded-16 overflow-hidden shadow-soft hover:shadow-soft-lg border border-gray-100 dark:border-slate-700 transition-all flex flex-col group" data-category="Gaming Consoles" data-price="850">
+          <div class="relative h-48 w-full overflow-hidden bg-slate-100 dark:bg-slate-700">
+            <img src="https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=700&q=80" alt="PlayStation 5" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <div class="absolute top-3 left-3 bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 shadow-sm">
+              <i data-lucide="badge-check" class="w-3.5 h-3.5"></i> Verified Owner
+            </div>
+            <div class="absolute top-3 right-3 bg-slate-900/80 text-white text-xs px-2 py-0.5 rounded-md font-semibold">
+              Gaming
+            </div>
+          </div>
+
+          <div class="p-4 flex-1 flex flex-col">
+            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
+              <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-teal"></i> South Extension, Delhi</span>
+              <span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="star" class="w-3.5 h-3.5 fill-amber-500"></i> 4.92 (65)</span>
+            </div>
+
+            <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white mb-1 group-hover:text-brand-blue transition-colors">
+              Sony PlayStation 5 Disc Edition + 2 Controllers
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">
+              Includes Spider-Man 2, FIFA 24, and God of War Ragnarok. Great for weekend house parties.
+            </p>
+
+            <div class="mt-auto pt-3 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
+              <div>
+                <span class="text-xs text-slate-400">Rental rate</span>
+                <div class="text-lg font-extrabold text-brand-blue font-heading">
+                  ₹850 <span class="text-xs font-normal text-slate-500">/ day</span>
+                </div>
+              </div>
+              <button onclick="openListingModal(4)" class="bg-brand-blue hover:bg-brand-blue-hover text-white text-xs font-semibold px-4 py-2 rounded-16 transition-colors shadow-sm">
+                View & Rent
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- 5. HOW IT WORKS (DUAL 3-STEP FLOW: RENT & REPAIR)         -->
+  <!-- ========================================================= -->
+  <section id="how-it-works" class="py-16 md:py-24 bg-gray-100/70 dark:bg-slate-800/40 border-y border-gray-200/60 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Section Title -->
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <h2 class="text-3xl sm:text-4xl font-extrabold font-heading text-slate-900 dark:text-white">
+          How Renty Pack Works
+        </h2>
+        <p class="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-2">
+          Transparent, secure, and protected every step of the way
+        </p>
+
+        <!-- Toggle Switch: Renting vs Repairs -->
+        <div class="inline-flex p-1.5 mt-6 rounded-16 bg-white dark:bg-slate-800 shadow-sm border border-gray-200 dark:border-slate-700">
+          <button id="toggle-rent-flow" onclick="switchFlow('rent')" class="px-5 py-2 rounded-16 text-sm font-semibold bg-brand-blue text-white shadow-sm transition-all">
+            1. Renting Gadgets
+          </button>
+          <button id="toggle-repair-flow" onclick="switchFlow('repair')" class="px-5 py-2 rounded-16 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-teal transition-all">
+            2. Requesting Repairs
+          </button>
+        </div>
+      </div>
+
+      <!-- Flow 1: Renting (3 Steps: Browse, Book, Return) -->
+      <div id="flow-rent" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Step 1 -->
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-16 shadow-soft border border-gray-100 dark:border-slate-700 relative text-center flex flex-col items-center">
+          <div class="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/40 text-brand-blue font-heading font-extrabold text-lg flex items-center justify-center mb-6">
+            01
+          </div>
+          <div class="w-16 h-16 rounded-16 bg-blue-100 dark:bg-blue-950/60 text-brand-blue flex items-center justify-center mb-4">
+            <i data-lucide="search" class="w-8 h-8"></i>
+          </div>
+          <h3 class="font-heading font-bold text-xl text-slate-900 dark:text-white mb-2">Browse & Select</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            Find the gadget you need near your location. Review verified owner ratings, transparent daily rental pricing, and deposit requirements.
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-16 shadow-soft border border-gray-100 dark:border-slate-700 relative text-center flex flex-col items-center">
+          <div class="w-12 h-12 rounded-full bg-teal-50 dark:bg-teal-900/40 text-brand-teal font-heading font-extrabold text-lg flex items-center justify-center mb-6">
+            02
+          </div>
+          <div class="w-16 h-16 rounded-16 bg-teal-100 dark:bg-teal-950/60 text-brand-teal flex items-center justify-center mb-4">
+            <i data-lucide="shield-check" class="w-8 h-8"></i>
+          </div>
+          <h3 class="font-heading font-bold text-xl text-slate-900 dark:text-white mb-2">Secure Escrow & Pick Up</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            Book with card or UPI. Your refundable security deposit is safely locked in automated escrow until the rental period completes smoothly.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-16 shadow-soft border border-gray-100 dark:border-slate-700 relative text-center flex flex-col items-center">
+          <div class="w-12 h-12 rounded-full bg-orange-50 dark:bg-orange-900/40 text-brand-orange font-heading font-extrabold text-lg flex items-center justify-center mb-6">
+            03
+          </div>
+          <div class="w-16 h-16 rounded-16 bg-orange-100 dark:bg-orange-950/60 text-brand-orange flex items-center justify-center mb-4">
+            <i data-lucide="refresh-cw" class="w-8 h-8"></i>
+          </div>
+          <h3 class="font-heading font-bold text-xl text-slate-900 dark:text-white mb-2">Return & Instant Refund</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            Hand over the equipment. Upon owner inspection confirmation, your full security deposit is unlocked immediately to your original payment method.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Flow 2: Repairs (3 Steps: Describe Issue, Get Quotes, Get It Fixed) -->
+      <div id="flow-repair" class="hidden grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Step 1 -->
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-16 shadow-soft border border-gray-100 dark:border-slate-700 relative text-center flex flex-col items-center">
+          <div class="w-12 h-12 rounded-full bg-teal-50 dark:bg-teal-900/40 text-brand-teal font-heading font-extrabold text-lg flex items-center justify-center mb-6">
+            01
+          </div>
+          <div class="w-16 h-16 rounded-16 bg-teal-100 dark:bg-teal-950/60 text-brand-teal flex items-center justify-center mb-4">
+            <i data-lucide="file-question" class="w-8 h-8"></i>
+          </div>
+          <h3 class="font-heading font-bold text-xl text-slate-900 dark:text-white mb-2">Describe the Issue</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            Enter your laptop or device details (broken screen, battery drain, motherboard fault, liquid spill) and upload quick diagnostic photos.
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-16 shadow-soft border border-gray-100 dark:border-slate-700 relative text-center flex flex-col items-center">
+          <div class="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/40 text-brand-blue font-heading font-extrabold text-lg flex items-center justify-center mb-6">
+            02
+          </div>
+          <div class="w-16 h-16 rounded-16 bg-blue-100 dark:bg-blue-950/60 text-brand-blue flex items-center justify-center mb-4">
+            <i data-lucide="badge-percent" class="w-8 h-8"></i>
+          </div>
+          <h3 class="font-heading font-bold text-xl text-slate-900 dark:text-white mb-2">Compare Free Quotes</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            Verified local technicians send transparent repair quotes with itemized spare parts pricing, estimated repair turnaround, and pick-up options.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-16 shadow-soft border border-gray-100 dark:border-slate-700 relative text-center flex flex-col items-center">
+          <div class="w-12 h-12 rounded-full bg-orange-50 dark:bg-orange-900/40 text-brand-orange font-heading font-extrabold text-lg flex items-center justify-center mb-6">
+            03
+          </div>
+          <div class="w-16 h-16 rounded-16 bg-orange-100 dark:bg-orange-950/60 text-brand-orange flex items-center justify-center mb-4">
+            <i data-lucide="wrench" class="w-8 h-8"></i>
+          </div>
+          <h3 class="font-heading font-bold text-xl text-slate-900 dark:text-white mb-2">Get It Fixed & Protected</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            Relax while your gear is serviced. Every certified repair comes backed by Renty Pack's strict 30-day parts and labor guarantee.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- 6. REPAIR SERVICES SECTION                                -->
+  <!-- ========================================================= -->
+  <section id="repair-section" class="py-16 md:py-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Section Header -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 text-brand-teal text-xs font-bold uppercase tracking-wider mb-2">
+            <i data-lucide="wrench" class="w-4 h-4"></i> Certified Tech Network
+          </div>
+          <h2 class="text-3xl font-extrabold font-heading text-slate-900 dark:text-white">
+            Trusted Repair Technicians
+          </h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Screened hardware experts offering doorstep pickup and 30-day warranty</p>
+        </div>
+
+        <button onclick="openRepairModal()" class="inline-flex items-center gap-2 bg-brand-teal hover:bg-brand-teal-dark text-white font-semibold text-sm px-5 py-2.5 rounded-16 transition-colors shadow-sm self-start md:self-auto">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>Post a Repair Request</span>
+        </button>
+      </div>
+
+      <!-- Technician Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Tech 1 -->
+        <div class="bg-white dark:bg-slate-800 rounded-16 p-6 shadow-soft hover:shadow-soft-lg border border-gray-100 dark:border-slate-700 transition-all flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Tech" class="w-14 h-14 rounded-full object-cover border-2 border-brand-teal" />
+                <div>
+                  <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Arjun K. Sharma</h3>
+                  <p class="text-xs text-brand-teal font-semibold">Master Apple & ThinkPad Specialist</p>
+                  <span class="text-[11px] text-slate-400">8+ Years Experience</span>
+                </div>
+              </div>
+              <div class="bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-500"></i> 4.96
+              </div>
+            </div>
+
+            <!-- Skills -->
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-[11px] px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium">MacBook Logic Board</span>
+              <span class="text-[11px] px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium">Retina Displays</span>
+              <span class="text-[11px] px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium">Liquid Damage Recovery</span>
+            </div>
+
+            <div class="bg-teal-50/80 dark:bg-teal-950/30 rounded-12 p-3 text-xs text-teal-800 dark:text-teal-300 flex items-center gap-2 mb-4">
+              <i data-lucide="shield-check" class="w-4 h-4 text-brand-teal shrink-0"></i>
+              <span class="font-medium">30-Day Complete Repair Warranty Included</span>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] text-slate-400">Avg. Turnaround</span>
+              <div class="text-sm font-bold text-slate-800 dark:text-white">24 - 48 Hours</div>
+            </div>
+            <button onclick="requestTechQuote('Arjun K. Sharma')" class="bg-slate-900 hover:bg-slate-800 dark:bg-brand-teal dark:hover:bg-brand-teal-dark text-white text-xs font-semibold px-4 py-2 rounded-16 transition-colors">
+              Request Quote
+            </button>
+          </div>
+        </div>
+
+        <!-- Tech 2 -->
+        <div class="bg-white dark:bg-slate-800 rounded-16 p-6 shadow-soft hover:shadow-soft-lg border border-gray-100 dark:border-slate-700 transition-all flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" alt="Tech" class="w-14 h-14 rounded-full object-cover border-2 border-brand-teal" />
+                <div>
+                  <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Vikram Rao</h3>
+                  <p class="text-xs text-brand-teal font-semibold">Gaming Rig & Console Engineer</p>
+                  <span class="text-[11px] text-slate-400">6+ Years Experience</span>
+                </div>
+              </div>
+              <div class="bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-500"></i> 4.91
+              </div>
+            </div>
+
+            <!-- Skills -->
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-[11px] px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium">PS5 / Xbox HDMI Port</span>
+              <span class="text-[11px] px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium">GPU Reballing</span>
+              <span class="text-[11px] px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium">Thermal Repasting</span>
+            </div>
+
+            <div class="bg-teal-50/80 dark:bg-teal-950/30 rounded-12 p-3 text-xs text-teal-800 dark:text-teal-300 flex items-center gap-2 mb-4">
+              <i data-lucide="shield-check" class="w-4 h-4 text-brand-teal shrink-0"></i>
+              <span class="font-medium">30-Day Complete Repair Warranty Included</span>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] text-slate-400">Avg. Turnaround</span>
+              <div class="text-sm font-bold text-slate-800 dark:text-white">Same Day / 24h</div>
+            </div>
+            <button onclick="requestTechQuote('Vikram Rao')" class="bg-slate-900 hover:bg-slate-800 dark:bg-brand-teal dark:hover:bg-brand-teal-dark text-white text-xs font-semibold px-4 py-2 rounded-16 transition-colors">
+              Request Quote
+            </button>
+          </div>
+        </div>
+
+        <!-- Tech 3 -->
+        <div class="bg-white dark:bg-slate-800 rounded-16 p-6 shadow-soft hover:shadow-soft-lg border border-gray-100 dark:border-slate-700 transition-all flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80" alt="Tech" class="w-14 h-14 rounded-full object-cover border-2 border-brand-teal" />
+                <div>
+                  <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Pooja Nair</h3>
+                  <p class="text-xs text-brand-teal font-semibold">Camera, Drone & Sensor Tech</p>
+                  <span class="text-[11px] text-slate-400">7+ Years Experience</span>
+                </div>
+              </div>
+              <div class="bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-500"></i> 4.98
+              </div>
+            </div>
+
+            <!-- Skills -->
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-[11px] px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium">DJI Gimbal Realignment</span>
+              <span class="text-[11px] px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium">DSLR Sensor Clean</span>
+              <span class="text-[11px] px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium">Lens Mount Fix</span>
+            </div>
+
+            <div class="bg-teal-50/80 dark:bg-teal-950/30 rounded-12 p-3 text-xs text-teal-800 dark:text-teal-300 flex items-center gap-2 mb-4">
+              <i data-lucide="shield-check" class="w-4 h-4 text-brand-teal shrink-0"></i>
+              <span class="font-medium">30-Day Complete Repair Warranty Included</span>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] text-slate-400">Avg. Turnaround</span>
+              <div class="text-sm font-bold text-slate-800 dark:text-white">24 - 36 Hours</div>
+            </div>
+            <button onclick="requestTechQuote('Pooja Nair')" class="bg-slate-900 hover:bg-slate-800 dark:bg-brand-teal dark:hover:bg-brand-teal-dark text-white text-xs font-semibold px-4 py-2 rounded-16 transition-colors">
+              Request Quote
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- 7. TRUST & SAFETY SECTION                                 -->
+  <!-- ========================================================= -->
+  <section class="py-16 md:py-24 bg-white dark:bg-slate-800/60 border-y border-gray-100 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Stats Highlights (500+ gadgets, 200+ techs, 4.8 rating) -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16 text-center">
+        <div class="p-6 rounded-16 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-soft">
+          <div class="text-3xl sm:text-4xl font-extrabold font-heading text-brand-blue mb-1">500+</div>
+          <div class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Gadgets Listed</div>
+        </div>
+        <div class="p-6 rounded-16 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-soft">
+          <div class="text-3xl sm:text-4xl font-extrabold font-heading text-brand-teal mb-1">200+</div>
+          <div class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Certified Technicians</div>
+        </div>
+        <div class="p-6 rounded-16 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-soft">
+          <div class="text-3xl sm:text-4xl font-extrabold font-heading text-amber-500 mb-1">4.8 / 5</div>
+          <div class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Average Platform Rating</div>
+        </div>
+        <div class="p-6 rounded-16 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-soft">
+          <div class="text-3xl sm:text-4xl font-extrabold font-heading text-brand-orange mb-1">₹50K</div>
+          <div class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Damage Protection Pool</div>
+        </div>
+      </div>
+
+      <!-- Trust Pillars Grid -->
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <h2 class="text-3xl font-extrabold font-heading text-slate-900 dark:text-white">
+          Built on Uncompromising Safety
+        </h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
+          Every transaction on Renty Pack is guarded with enterprise-grade escrow and identity verifications.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Pillar 1 -->
+        <div class="p-6 rounded-16 bg-gray-50 dark:bg-slate-800/80 border border-gray-100 dark:border-slate-700 flex flex-col items-center text-center">
+          <div class="w-12 h-12 rounded-16 bg-blue-100 dark:bg-blue-900/50 text-brand-blue flex items-center justify-center mb-4">
+            <i data-lucide="lock" class="w-6 h-6"></i>
+          </div>
+          <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white mb-2">Automated Escrow</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Your security deposit is never transferred directly to the owner. It stays in a bank-grade escrow vault until the gadget is checked back in.
+          </p>
+        </div>
+
+        <!-- Pillar 2 -->
+        <div class="p-6 rounded-16 bg-gray-50 dark:bg-slate-800/80 border border-gray-100 dark:border-slate-700 flex flex-col items-center text-center">
+          <div class="w-12 h-12 rounded-16 bg-teal-100 dark:bg-teal-900/50 text-brand-teal flex items-center justify-center mb-4">
+            <i data-lucide="user-check" class="w-6 h-6"></i>
+          </div>
+          <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white mb-2">100% ID Verification</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Both renters and technicians complete mandatory government ID checks and phone verification before participating.
+          </p>
+        </div>
+
+        <!-- Pillar 3 -->
+        <div class="p-6 rounded-16 bg-gray-50 dark:bg-slate-800/80 border border-gray-100 dark:border-slate-700 flex flex-col items-center text-center">
+          <div class="w-12 h-12 rounded-16 bg-orange-100 dark:bg-orange-900/50 text-brand-orange flex items-center justify-center mb-4">
+            <i data-lucide="shield" class="w-6 h-6"></i>
+          </div>
+          <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white mb-2">Damage Protection</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Every equipment rental is safeguarded by our incident protection guarantee against accidental drops and hardware malfunctions.
+          </p>
+        </div>
+
+        <!-- Pillar 4 -->
+        <div class="p-6 rounded-16 bg-gray-50 dark:bg-slate-800/80 border border-gray-100 dark:border-slate-700 flex flex-col items-center text-center">
+          <div class="w-12 h-12 rounded-16 bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-4">
+            <i data-lucide="check-circle" class="w-6 h-6"></i>
+          </div>
+          <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white mb-2">30-Day Repair Guarantee</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Every technician repair is backed by a 30-day parts and service guarantee. If the same issue reoccurs, it will be re-serviced free.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- 8. CUSTOMER REVIEWS CAROUSEL                              -->
+  <!-- ========================================================= -->
+  <section id="reviews" class="py-16 md:py-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
+        <div>
+          <div class="text-brand-blue text-xs font-bold uppercase tracking-wider mb-2">Real Stories</div>
+          <h2 class="text-3xl font-extrabold font-heading text-slate-900 dark:text-white">
+            What Our Community Says
+          </h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Over 2,400+ successful rentals and repairs across India</p>
+        </div>
+
+        <!-- Carousel navigation buttons -->
+        <div class="flex items-center gap-2">
+          <button onclick="prevReview()" class="p-2.5 rounded-full border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors">
+            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+          </button>
+          <button onclick="nextReview()" class="p-2.5 rounded-full border border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors">
+            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Carousel Cards Container -->
+      <div class="relative overflow-hidden">
+        <div id="reviews-track" class="flex transition-transform duration-300 ease-in-out gap-6">
+
+          <!-- Review 1 -->
+          <div class="review-slide w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] shrink-0 bg-white dark:bg-slate-800 p-6 rounded-16 shadow-soft border border-gray-100 dark:border-slate-700 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-1 text-amber-500 mb-3">
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+              </div>
+              <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-6 italic">
+                "Rented the Sony A7 IV for a 3-day wedding shoot in Bangalore. The gear was in mint condition, clean sensor, and the deposit was credited back within 2 hours of handover!"
+              </p>
+            </div>
+            <div class="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
+              <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" alt="User" class="w-10 h-10 rounded-full object-cover" />
+              <div>
+                <h4 class="font-heading font-bold text-sm text-slate-900 dark:text-white">Sneha Roy</h4>
+                <p class="text-xs text-brand-blue font-medium">Independent Filmmaker</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Review 2 -->
+          <div class="review-slide w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] shrink-0 bg-white dark:bg-slate-800 p-6 rounded-16 shadow-soft border border-gray-100 dark:border-slate-700 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-1 text-amber-500 mb-3">
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+              </div>
+              <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-6 italic">
+                "My MacBook screen shattered right before a client presentation. Arjun diagnosed it, picked it up, and had an OEM panel installed within 24 hours. The 30-day warranty gives so much peace of mind."
+              </p>
+            </div>
+            <div class="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
+              <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80" alt="User" class="w-10 h-10 rounded-full object-cover" />
+              <div>
+                <h4 class="font-heading font-bold text-sm text-slate-900 dark:text-white">Rohan Deshmukh</h4>
+                <p class="text-xs text-brand-teal font-medium">Product Designer</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Review 3 -->
+          <div class="review-slide w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] shrink-0 bg-white dark:bg-slate-800 p-6 rounded-16 shadow-soft border border-gray-100 dark:border-slate-700 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-1 text-amber-500 mb-3">
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-500"></i>
+              </div>
+              <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-6 italic">
+                "I had my PS5 and VR headset sitting idle during weekdays. Put them on Renty Pack and made ₹14,000 extra last month alone. Verified renters take great care of the items!"
+              </p>
+            </div>
+            <div class="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
+              <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80" alt="User" class="w-10 h-10 rounded-full object-cover" />
+              <div>
+                <h4 class="font-heading font-bold text-sm text-slate-900 dark:text-white">Ananya Iyer</h4>
+                <p class="text-xs text-brand-orange font-medium">Gadget Owner / Host</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- 9. CTA BANNER                                             -->
+  <!-- ========================================================= -->
+  <section class="py-12 md:py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-blue via-brand-teal to-blue-700 text-white p-8 sm:p-12 md:p-16 shadow-soft-lg">
+        <!-- Background decorative rings -->
+        <div class="absolute -right-10 -bottom-10 w-72 h-72 rounded-full border-8 border-white/10 pointer-events-none"></div>
+        <div class="absolute right-20 top-0 w-48 h-48 rounded-full border-4 border-white/10 pointer-events-none"></div>
+
+        <div class="relative z-10 max-w-2xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider mb-4">
+            <i data-lucide="trending-up" class="w-4 h-4"></i> Turn idle electronics into income
+          </div>
+          <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold font-heading tracking-tight mb-4 leading-tight">
+            Got a gadget sitting idle? Earn money by renting it out.
+          </h2>
+          <p class="text-sm sm:text-base text-blue-100 mb-8 leading-relaxed">
+            List in under 2 minutes. Set your own rental rules, approve verified borrowers, and enjoy automated security deposits and complete damage coverage.
+          </p>
+
+          <div class="flex flex-wrap items-center gap-4">
+            <button onclick="openListModal(event)" class="bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold text-sm sm:text-base px-6 py-3.5 rounded-16 shadow-lg shadow-brand-orange/30 hover:shadow-xl transition-all flex items-center gap-2">
+              <i data-lucide="plus-circle" class="w-5 h-5"></i>
+              <span>List Your Gadget Now</span>
+            </button>
+            <a href="#how-it-works" class="bg-white/15 hover:bg-white/25 text-white font-semibold text-sm sm:text-base px-6 py-3.5 rounded-16 backdrop-blur-sm transition-colors flex items-center gap-2">
+              <span>Calculate Potential Earnings</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= -->
+  <!-- 10. FOOTER                                                -->
+  <!-- ========================================================= -->
+  <footer class="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800 pt-16 pb-12 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
+        
+        <!-- Brand Info -->
+        <div class="lg:col-span-2">
+          <a href="#" class="flex items-center gap-2.5 mb-4">
+            <div class="w-10 h-10 rounded-16 bg-gradient-to-tr from-brand-blue to-brand-teal flex items-center justify-center text-white shadow-md">
+              <i data-lucide="layers" class="w-5 h-5"></i>
+            </div>
+            <span class="text-2xl font-bold font-heading text-slate-900 dark:text-white">
+              Renty<span class="text-brand-blue">Pack</span>
+            </span>
+          </a>
+          <p class="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6 leading-relaxed">
+            The next-generation electronics sharing and on-demand repair ecosystem. Safe rentals with automated escrow and guaranteed technician repairs.
+          </p>
+
+          <!-- Social Icons -->
+          <div class="flex items-center gap-3">
+            <a href="#" class="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-brand-blue hover:bg-blue-50 flex items-center justify-center transition-colors">
+              <i data-lucide="twitter" class="w-4 h-4"></i>
+            </a>
+            <a href="#" class="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-brand-blue hover:bg-blue-50 flex items-center justify-center transition-colors">
+              <i data-lucide="instagram" class="w-4 h-4"></i>
+            </a>
+            <a href="#" class="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-brand-blue hover:bg-blue-50 flex items-center justify-center transition-colors">
+              <i data-lucide="linkedin" class="w-4 h-4"></i>
+            </a>
+            <a href="#" class="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-brand-blue hover:bg-blue-50 flex items-center justify-center transition-colors">
+              <i data-lucide="github" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Links 1: Rentals -->
+        <div>
+          <h4 class="font-heading font-semibold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4">
+            Rentals
+          </h4>
+          <ul class="space-y-2.5 text-sm text-slate-500 dark:text-slate-400">
+            <li><a href="#rent-section" class="hover:text-brand-blue transition-colors">Mirrorless Cameras</a></li>
+            <li><a href="#rent-section" class="hover:text-brand-blue transition-colors">Laptops & Workstations</a></li>
+            <li><a href="#rent-section" class="hover:text-brand-blue transition-colors">DJI Drones</a></li>
+            <li><a href="#rent-section" class="hover:text-brand-blue transition-colors">Gaming Consoles</a></li>
+            <li><a href="#rent-section" class="hover:text-brand-blue transition-colors">Audio Equipment</a></li>
+          </ul>
+        </div>
+
+        <!-- Links 2: Repairs -->
+        <div>
+          <h4 class="font-heading font-semibold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4">
+            Repairs
+          </h4>
+          <ul class="space-y-2.5 text-sm text-slate-500 dark:text-slate-400">
+            <li><a href="#repair-section" class="hover:text-brand-teal transition-colors">MacBook Repairs</a></li>
+            <li><a href="#repair-section" class="hover:text-brand-teal transition-colors">Screen Replacements</a></li>
+            <li><a href="#repair-section" class="hover:text-brand-teal transition-colors">PS5 HDMI Fixes</a></li>
+            <li><a href="#repair-section" class="hover:text-brand-teal transition-colors">Drone Calibration</a></li>
+            <li><a href="#repair-section" class="hover:text-brand-teal transition-colors">Liquid Damage Service</a></li>
+          </ul>
+        </div>
+
+        <!-- Links 3: Newsletter Signup -->
+        <div>
+          <h4 class="font-heading font-semibold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4">
+            Stay Updated
+          </h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+            Get exclusive weekly rental coupon codes and technician tips.
+          </p>
+          <form onsubmit="handleNewsletter(event)" class="space-y-2">
+            <input type="email" required placeholder="Enter your email" class="w-full text-xs px-3.5 py-2.5 rounded-16 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-slate-800 dark:text-white focus:outline-none focus:border-brand-blue" />
+            <button type="submit" class="w-full bg-brand-blue hover:bg-brand-blue-hover text-white text-xs font-semibold py-2.5 rounded-16 transition-colors">
+              Subscribe
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Copyright Bar -->
+      <div class="pt-8 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-4">
+        <div>
+          © 2026 Renty Pack Technologies Inc. All rights reserved.
+        </div>
+        <div class="flex items-center gap-6">
+          <a href="#" class="hover:underline">Privacy Policy</a>
+          <a href="#" class="hover:underline">Terms of Service</a>
+          <a href="#" class="hover:underline">Rental Insurance Terms</a>
+          <a href="#" class="hover:underline">Security Deposit Escrow</a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- ========================================================= -->
+  <!-- EXTRA UI DETAILS: STICKY "BOOK NOW" BAR ON MOBILE         -->
+  <!-- ========================================================= -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-gray-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between shadow-2xl">
+    <div>
+      <span class="text-[11px] text-slate-400 block font-medium">Daily Rental From</span>
+      <span class="text-base font-extrabold text-brand-blue font-heading">₹850 <span class="text-xs font-normal text-slate-500">/ day</span></span>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="#rent-section" class="bg-gray-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold px-3 py-2 rounded-16">
+        Filter
+      </a>
+      <button onclick="openListingModal(1)" class="bg-brand-orange hover:bg-brand-orange-hover text-white text-xs font-bold px-4 py-2 rounded-16 shadow-md shadow-brand-orange/20">
+        Book Now
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- EXTRA UI DETAILS: DETAILED LISTING MODAL WITH GALLERY,     -->
+  <!-- AVAILABILITY CALENDAR & PRICE BREAKDOWN                   -->
+  <!-- ========================================================= -->
+  <div id="listing-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-slate-800 transition-all p-6 relative">
+      
+      <!-- Close button -->
+      <button onclick="closeListingModal()" class="absolute top-4 right-4 p-2 rounded-full bg-gray-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Left: Image Gallery -->
+        <div>
+          <div class="rounded-16 overflow-hidden h-64 bg-slate-100 dark:bg-slate-800 mb-3">
+            <img id="modal-main-img" src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=700&q=80" alt="Gadget Preview" class="w-full h-full object-cover" />
+          </div>
+          <!-- Thumbnail strip -->
+          <div class="grid grid-cols-3 gap-2">
+            <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=300&q=80" class="h-16 rounded-lg object-cover cursor-pointer border-2 border-brand-blue" onclick="setModalImg(this.src)" />
+            <img src="https://images.unsplash.com/photo-1502920917128-1aa500764cbd?auto=format&fit=crop&w=300&q=80" class="h-16 rounded-lg object-cover cursor-pointer opacity-70 hover:opacity-100 border border-transparent" onclick="setModalImg(this.src)" />
+            <img src="https://images.unsplash.com/photo-1581591524425-c7e0978865fc?auto=format&fit=crop&w=300&q=80" class="h-16 rounded-lg object-cover cursor-pointer opacity-70 hover:opacity-100 border border-transparent" onclick="setModalImg(this.src)" />
+          </div>
+
+          <!-- Verified Owner Card snippet -->
+          <div class="mt-6 p-4 rounded-16 bg-gray-50 dark:bg-slate-800/80 border border-gray-100 dark:border-slate-700 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" class="w-10 h-10 rounded-full object-cover" />
+              <div>
+                <span class="text-xs text-slate-400">Verified Owner</span>
+                <h5 class="text-sm font-bold text-slate-800 dark:text-white">Rahul Mehta</h5>
+                <span class="text-[11px] text-emerald-500 font-semibold">100% ID Verified</span>
+              </div>
+            </div>
+            <button onclick="alert('Starting encrypted chat with owner...')" class="text-xs font-semibold px-3 py-1.5 rounded-16 bg-brand-blue/10 text-brand-blue hover:bg-brand-blue/20 flex items-center gap-1.5">
+              <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Chat
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Details, Availability & Price Breakdown -->
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-xs font-bold text-brand-blue uppercase tracking-wider">In High Demand</span>
+            <span class="text-xs text-slate-400">• Available for Immediate Pickup</span>
+          </div>
+          <h3 id="modal-title" class="text-xl font-bold font-heading text-slate-900 dark:text-white mb-2">
+            Sony Alpha A7 IV Mirrorless Camera
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+            Comes with camera body, FE 28-70mm OSS lens, 2 genuine batteries, 128GB V90 SD card, high-speed charger, and padded protective carry bag.
+          </p>
+
+          <!-- Availability & Date selector -->
+          <div class="p-3 rounded-16 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 mb-4">
+            <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Select Rental Duration</label>
+            <div class="flex items-center gap-3">
+              <input type="number" id="rental-days" value="3" min="1" max="30" onchange="updatePriceBreakdown()" class="w-20 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-sm font-bold text-slate-800 dark:text-white text-center" />
+              <span class="text-xs font-medium text-slate-600 dark:text-slate-300">Days duration</span>
+            </div>
+          </div>
+
+          <!-- Price Breakdown Table -->
+          <div class="bg-gray-50 dark:bg-slate-800/60 p-4 rounded-16 border border-gray-100 dark:border-slate-700 space-y-2 text-xs mb-5">
+            <div class="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>Rental Rate (₹<span id="rate-per-day">1,800</span> × <span id="days-count">3</span> days)</span>
+              <span class="font-semibold text-slate-800 dark:text-white">₹<span id="subtotal-amt">5,400</span></span>
+            </div>
+            <div class="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>Escrow Service & Damage Protection</span>
+              <span class="font-semibold text-slate-800 dark:text-white">₹250</span>
+            </div>
+            <div class="flex justify-between text-slate-600 dark:text-slate-400">
+              <span class="flex items-center gap-1">Refundable Security Deposit <i data-lucide="info" class="w-3 h-3 text-slate-400"></i></span>
+              <span class="font-semibold text-brand-teal">₹3,000 (Refundable)</span>
+            </div>
+            <div class="pt-2 border-t border-gray-200 dark:border-slate-700 flex justify-between text-sm font-bold text-slate-900 dark:text-white">
+              <span>Total Payable Now</span>
+              <span class="text-brand-blue font-extrabold text-base">₹<span id="total-amt">8,650</span></span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-3">
+            <button onclick="confirmBooking()" class="flex-1 bg-brand-orange hover:bg-brand-orange-hover text-white font-bold py-3 rounded-16 shadow-md shadow-brand-orange/30 transition-all text-center text-sm">
+              Confirm & Book with Escrow
+            </button>
+          </div>
+          <p class="text-[11px] text-center text-slate-400 mt-2">
+            No charge until owner approves pickup • Free cancellation up to 24h before
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC & INTERACTIONS -->
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Dark Mode Toggle Logic
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const htmlElement = document.documentElement;
+
+    // Check system or saved preference
+    if (localStorage.getItem('rentypack_theme') === 'dark' || (!localStorage.getItem('rentypack_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      htmlElement.classList.add('dark');
+    } else {
+      htmlElement.classList.remove('dark');
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      htmlElement.classList.toggle('dark');
+      if (htmlElement.classList.contains('dark')) {
+        localStorage.setItem('rentypack_theme', 'dark');
+      } else {
+        localStorage.setItem('rentypack_theme', 'light');
+      }
+    });
+
+    // Mobile Menu Toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    // How It Works Flow Switcher
+    function switchFlow(type) {
+      const rentBtn = document.getElementById('toggle-rent-flow');
+      const repairBtn = document.getElementById('toggle-repair-flow');
+      const rentFlow = document.getElementById('flow-rent');
+      const repairFlow = document.getElementById('flow-repair');
+
+      if (type === 'rent') {
+        rentBtn.className = 'px-5 py-2 rounded-16 text-sm font-semibold bg-brand-blue text-white shadow-sm transition-all';
+        repairBtn.className = 'px-5 py-2 rounded-16 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-teal transition-all';
+        rentFlow.classList.remove('hidden');
+        repairFlow.classList.add('hidden');
+      } else {
+        repairBtn.className = 'px-5 py-2 rounded-16 text-sm font-semibold bg-brand-teal text-white shadow-sm transition-all';
+        rentBtn.className = 'px-5 py-2 rounded-16 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-blue transition-all';
+        repairFlow.classList.remove('hidden');
+        rentFlow.classList.add('hidden');
+      }
+    }
+
+    // Filter Categories
+    function filterCategory(category) {
+      const cards = document.querySelectorAll('.gadget-card');
+      const filterPills = document.querySelectorAll('.filter-pill');
+
+      // Update pills
+      filterPills.forEach(pill => {
+        if (pill.textContent.trim().toLowerCase() === category.toLowerCase() || (category === 'All' && pill.textContent.trim() === 'All')) {
+          pill.className = 'filter-pill active px-3.5 py-1.5 rounded-full text-xs font-semibold bg-brand-blue text-white transition-colors shrink-0';
+        } else {
+          pill.className = 'filter-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-gray-200 transition-colors shrink-0';
+        }
+      });
+
+      // Show/Hide cards
+      cards.forEach(card => {
+        if (category === 'All' || card.getAttribute('data-category').toLowerCase() === category.toLowerCase()) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    }
+
+    // Price Filter
+    function applyFilters() {
+      const maxPrice = document.getElementById('price-filter').value;
+      const cards = document.querySelectorAll('.gadget-card');
+
+      cards.forEach(card => {
+        const price = parseInt(card.getAttribute('data-price'), 10);
+        if (maxPrice === 'all' || price <= parseInt(maxPrice, 10)) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    }
+
+    // Skeleton Loader Toggle Demo
+    let isSkeletonActive = false;
+    function toggleSkeleton() {
+      isSkeletonActive = !isSkeletonActive;
+      const skeletonGrid = document.getElementById('skeleton-grid');
+      const gadgetsGrid = document.getElementById('gadgets-grid');
+      const label = document.getElementById('skeleton-label');
+
+      if (isSkeletonActive) {
+        skeletonGrid.classList.remove('hidden');
+        gadgetsGrid.classList.add('hidden');
+        label.textContent = 'Restore Real Cards';
+      } else {
+        skeletonGrid.classList.add('hidden');
+        gadgetsGrid.classList.remove('hidden');
+        label.textContent = 'Demo Skeleton Loader';
+      }
+    }
+
+    // Customer Reviews Carousel
+    let currentReviewIndex = 0;
+    const totalReviewSlides = 3;
+
+    function updateCarousel() {
+      const track = document.getElementById('reviews-track');
+      const offsetPercent = currentReviewIndex * 33.333;
+      track.style.transform = `translateX(-${offsetPercent}%)`;
+    }
+
+    function nextReview() {
+      currentReviewIndex = (currentReviewIndex + 1) % totalReviewSlides;
+      updateCarousel();
+    }
+
+    function prevReview() {
+      currentReviewIndex = (currentReviewIndex - 1 + totalReviewSlides) % totalReviewSlides;
+      updateCarousel();
+    }
+
+    // Listing Details Modal
+    let activeDailyRate = 1800;
+
+    function openListingModal(id) {
+      const modal = document.getElementById('listing-modal');
+      const title = document.getElementById('modal-title');
+      const rate = document.getElementById('rate-per-day');
+
+      if (id === 1) {
+        title.textContent = 'Sony Alpha A7 IV Mirrorless + 28-70mm Lens';
+        activeDailyRate = 1800;
+      } else if (id === 2) {
+        title.textContent = 'DJI Mini 4 Pro Fly More Combo (4K HDR)';
+        activeDailyRate = 1400;
+      } else if (id === 3) {
+        title.textContent = 'Apple MacBook Pro 16" (M3 Max, 36GB RAM)';
+        activeDailyRate = 2500;
+      } else {
+        title.textContent = 'Sony PlayStation 5 Disc Edition + 2 Controllers';
+        activeDailyRate = 850;
+      }
+
+      rate.textContent = activeDailyRate.toLocaleString();
+      updatePriceBreakdown();
+      modal.classList.remove('hidden');
+    }
+
+    function closeListingModal() {
+      document.getElementById('listing-modal').classList.add('hidden');
+    }
+
+    function setModalImg(src) {
+      document.getElementById('modal-main-img').src = src;
+    }
+
+    function updatePriceBreakdown() {
+      const days = parseInt(document.getElementById('rental-days').value, 10) || 1;
+      document.getElementById('days-count').textContent = days;
+      const subtotal = activeDailyRate * days;
+      document.getElementById('subtotal-amt').textContent = subtotal.toLocaleString();
+      const serviceFee = 250;
+      const deposit = 3000;
+      const total = subtotal + serviceFee + deposit;
+      document.getElementById('total-amt').textContent = total.toLocaleString();
+    }
+
+    function confirmBooking() {
+      alert('🎉 Booking Request Submitted! The owner has been notified to confirm pickup location.');
+      closeListingModal();
+    }
+
+    // Modal Helpers
+    function openListModal(e) {
+      if (e) e.preventDefault();
+      alert('✨ "List Your Gadget" wizard opened! Add photos, set your daily price, and verify your ID.');
+    }
+
+    function openRepairModal() {
+      alert('🔧 Diagnostic intake opened! Describe your hardware fault to get free instant quotes.');
+    }
+
+    function requestTechQuote(techName) {
+      alert(`📩 Request sent to ${techName}! They typically reply with an itemized estimate in under 15 minutes.`);
+    }
+
+    function openAuthModal() {
+      alert('🔐 Welcome to Renty Pack! Please sign in with Google or Phone OTP.');
+    }
+
+    function handleSearch() {
+      const query = document.getElementById('search-input').value;
+      const loc = document.getElementById('location-select').value;
+      alert(`🔍 Searching Renty Pack for "${query || 'All Gadgets'}" in ${loc.toUpperCase()}...`);
+    }
+
+    function handleNewsletter(e) {
+      e.preventDefault();
+      alert('💌 Thank you for subscribing to Renty Pack updates!');
+    }
+  </script>
+</body>
+</html>

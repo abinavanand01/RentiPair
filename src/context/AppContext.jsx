@@ -7,7 +7,6 @@ import {
   INITIAL_NOTIFICATIONS
 } from '../data/mockData';
 import { supabase, isSupabaseConfigured, localStorageAuth } from '../lib/supabaseClient';
-import { getEquipmentImageUrl } from '../utils/imageFallbacks';
 
 const AppContext = createContext();
 
@@ -25,44 +24,88 @@ export function AppProvider({ children }) {
   // Active Role View Filter for Dashboard: 'user' | 'technician' | 'owner' | 'admin'
   const [currentRole, setCurrentRole] = useState('user');
 
-  // State Collections with LocalStorage fallbacks & Version Migration for High-Res Verified Images
+  // Helper to filter out legacy demo data
+  const isRealItem = (item) => {
+    if (!item) return false;
+    const isDemoId = typeof item.id === 'string' && (item.id.startsWith('eq-10') || item.id.startsWith('eq-11') || item.id.startsWith('eq-12') || item.id.startsWith('tech-30') || item.id.startsWith('RNT-90') || item.id.startsWith('RNT-88') || item.id.startsWith('REP-40') || item.id.startsWith('REP-39'));
+    const isDemoName = item.owner?.name === 'Karthik Subramanian' || item.renterName === 'Aditya Narayan' || item.name === 'Rajesh Kannan';
+    return !isDemoId && !isDemoName;
+  };
+
+  // State Collections — 100% data-driven from real user actions and Supabase
   const [equipment, setEquipment] = useState(() => {
-    const version = localStorage.getItem('rentipair_eq_catalog_ver');
-    const saved = localStorage.getItem('rentipair_equipment');
-    const CURRENT_VERSION = 'v3_verified_highres_catalog';
-
-    if (version === CURRENT_VERSION && saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return INITIAL_EQUIPMENT;
+    try {
+      const saved = localStorage.getItem('rentipair_equipment');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed.filter(isRealItem) : [];
       }
+    } catch {
+      // ignore
     }
-
-    localStorage.setItem('rentipair_eq_catalog_ver', CURRENT_VERSION);
-    localStorage.setItem('rentipair_equipment', JSON.stringify(INITIAL_EQUIPMENT));
     return INITIAL_EQUIPMENT;
   });
 
   const [technicians, setTechnicians] = useState(() => {
-    const saved = localStorage.getItem('rentipair_technicians');
-    return saved ? JSON.parse(saved) : INITIAL_TECHNICIANS;
+    try {
+      const saved = localStorage.getItem('rentipair_technicians');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed.filter(isRealItem) : [];
+      }
+    } catch {
+      // ignore
+    }
+    return INITIAL_TECHNICIANS;
   });
 
   const [rentals, setRentals] = useState(() => {
-    const saved = localStorage.getItem('rentipair_rentals');
-    return saved ? JSON.parse(saved) : INITIAL_RENTAL_ORDERS;
+    try {
+      const saved = localStorage.getItem('rentipair_rentals');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed.filter(isRealItem) : [];
+      }
+    } catch {
+      // ignore
+    }
+    return INITIAL_RENTAL_ORDERS;
   });
 
   const [repairs, setRepairs] = useState(() => {
-    const saved = localStorage.getItem('rentipair_repairs');
-    return saved ? JSON.parse(saved) : INITIAL_REPAIR_REQUESTS;
+    try {
+      const saved = localStorage.getItem('rentipair_repairs');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed.filter(isRealItem) : [];
+      }
+    } catch {
+      // ignore
+    }
+    return INITIAL_REPAIR_REQUESTS;
   });
 
   const [notifications, setNotifications] = useState(() => {
-    const saved = localStorage.getItem('rentipair_notifications');
-    return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
+    try {
+      const saved = localStorage.getItem('rentipair_notifications');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed.filter(n => !n.id?.startsWith('notif-1') && !n.id?.startsWith('notif-2')) : [];
+      }
+    } catch {
+      // ignore
+    }
+    return INITIAL_NOTIFICATIONS;
   });
+
+  // Purge legacy storage keys on boot
+  useEffect(() => {
+    try {
+      localStorage.removeItem('rentipair_eq_catalog_ver');
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Toast Notification System
   const [toasts, setToasts] = useState([]);
@@ -73,6 +116,106 @@ export function AppProvider({ children }) {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 4000);
   }, []);
+
+  // Wishlist State (equipment IDs)
+  const [wishlist, setWishlist] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rentipair_wishlist');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Compare Gadgets State (equipment items array, max 4)
+  const [compareList, setCompareList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rentipair_compare');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Availability Alerts State
+  const [availabilityAlerts, setAvailabilityAlerts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rentipair_availability_alerts');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // In-App Chat Conversations & Messages State
+  const [conversations, setConversations] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rentipair_conversations');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rentipair_messages');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [activeConversation, setActiveConversation] = useState(null);
+
+  // Referrals State
+  const [referrals, setReferrals] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rentipair_referrals');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Student Verifications State
+  const [studentVerifications, setStudentVerifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rentipair_student_verifications');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Sync new state collections to local storage
+  useEffect(() => {
+    localStorage.setItem('rentipair_wishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
+
+  useEffect(() => {
+    localStorage.setItem('rentipair_compare', JSON.stringify(compareList));
+  }, [compareList]);
+
+  useEffect(() => {
+    localStorage.setItem('rentipair_availability_alerts', JSON.stringify(availabilityAlerts));
+  }, [availabilityAlerts]);
+
+  useEffect(() => {
+    localStorage.setItem('rentipair_conversations', JSON.stringify(conversations));
+  }, [conversations]);
+
+  useEffect(() => {
+    localStorage.setItem('rentipair_messages', JSON.stringify(messages));
+  }, [messages]);
+
+  useEffect(() => {
+    localStorage.setItem('rentipair_referrals', JSON.stringify(referrals));
+  }, [referrals]);
+
+  useEffect(() => {
+    localStorage.setItem('rentipair_student_verifications', JSON.stringify(studentVerifications));
+  }, [studentVerifications]);
 
   // Modals Controller
   const [modalState, setModalState] = useState({
@@ -85,7 +228,10 @@ export function AppProvider({ children }) {
     search: { open: false },
     schemaDoc: { open: false },
     forgotPassword: { open: false },
-    notificationDrawer: { open: false }
+    notificationDrawer: { open: false },
+    compare: { open: false },
+    chat: { open: false, data: null },
+    studentVerify: { open: false }
   });
 
   const openModal = (name, data = null) => {
@@ -122,6 +268,56 @@ export function AppProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('rentipair_notifications', JSON.stringify(notifications));
   }, [notifications]);
+
+  // Load Remote Data from Supabase when available
+  useEffect(() => {
+    async function loadRemoteData() {
+      if (isSupabaseConfigured) {
+        try {
+          const { data: eqData } = await supabase.from('equipment').select('*');
+          if (eqData && eqData.length > 0) {
+            setEquipment(eqData.map(e => ({
+              ...e,
+              title: e.name || e.title,
+              dailyRate: Number(e.price_per_day || e.dailyRate),
+              securityDeposit: Number(e.security_deposit || e.securityDeposit || 0),
+              image: (e.images && e.images[0]) || e.image || '',
+              images: e.images || [e.image].filter(Boolean),
+              isAvailable: e.is_available ?? e.isAvailable ?? true,
+              status: e.status === 'APPROVED' ? 'Approved' : e.status === 'PENDING' ? 'Pending' : e.status
+            })));
+          }
+
+          const { data: techData } = await supabase.from('technicians').select('*, profiles(*)');
+          if (techData && techData.length > 0) {
+            setTechnicians(techData.map(t => ({
+              ...t,
+              name: t.profiles?.full_name || t.name,
+              avatar: t.profiles?.avatar_url || t.avatar || '',
+              status: t.verification_status === 'VERIFIED' ? 'Approved' : 'Pending',
+              yearsExperience: t.experience_years || t.yearsExperience || 0,
+              serviceArea: t.service_area || t.serviceArea || '',
+              categories: t.categories || []
+            })));
+          }
+
+          const { data: rentData } = await supabase.from('rentals').select('*');
+          if (rentData && rentData.length > 0) {
+            setRentals(rentData);
+          }
+
+          const { data: repData } = await supabase.from('repair_requests').select('*');
+          if (repData && repData.length > 0) {
+            setRepairs(repData);
+          }
+        } catch (err) {
+          console.error('Error fetching data from Supabase:', err);
+        }
+      }
+    }
+
+    loadRemoteData();
+  }, []);
 
   // Load User Profile & Capabilities from Supabase
   const loadUserData = useCallback(async (userSession) => {
@@ -172,6 +368,18 @@ export function AppProvider({ children }) {
         year: 'numeric'
       });
 
+      // User's permanent referral code
+      const defaultRefCode = `${displayName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6) || 'USER'}-RP26`;
+      const userRefCode = profile?.referral_code || authUser.user_metadata?.referral_code || defaultRefCode;
+
+      // Student verification status check
+      const studentRec = studentVerifications.find(s => s.userId === authUser.id && s.status === 'VERIFIED');
+      const isStudentVerified = Boolean(studentRec || profile?.is_student_verified);
+
+      // Referral rewards balance
+      const qualifiedRefs = referrals.filter(r => r.referrerId === authUser.id && (r.status === 'QUALIFIED' || r.status === 'REWARDED')).length;
+      const walletCredits = qualifiedRefs * 100;
+
       setCurrentUser({
         id: authUser.id,
         email: authUser.email,
@@ -182,7 +390,10 @@ export function AppProvider({ children }) {
         onboardingCompleted: profile?.onboarding_completed || false,
         isAdmin: profile?.is_admin || authUser.email?.includes('admin') || false,
         joinedDate: joinedYear,
-        walletBalance: 0
+        referralCode: userRefCode,
+        isStudentVerified,
+        studentInstitution: studentRec?.institutionName || profile?.institution_name || '',
+        walletBalance: walletCredits
       });
 
       setUserCapabilities(capabilities);
@@ -275,7 +486,7 @@ export function AppProvider({ children }) {
     }
   };
 
-  const signup = async ({ fullName, email, password, phone, city }) => {
+  const signup = async ({ fullName, email, password, phone, city, avatarUrl = '' }) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
@@ -285,7 +496,7 @@ export function AppProvider({ children }) {
             full_name: fullName,
             phone: phone || '',
             city: city || 'Chennai',
-            avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName)}&backgroundColor=0b1533,1677ff`
+            avatar_url: avatarUrl || ''
           }
         }
       });
@@ -294,16 +505,18 @@ export function AppProvider({ children }) {
         throw error;
       }
 
-      // If user profile row isn't automatically created by trigger, upsert it
       if (data.user) {
         const profilePayload = {
           id: data.user.id,
           user_id: data.user.id,
           full_name: fullName,
-          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName)}&backgroundColor=0b1533,1677ff`,
+          avatar_url: avatarUrl || '',
           phone: phone || '',
           city: city || 'Chennai',
-          onboarding_completed: false
+          onboarding_completed: false,
+          is_admin: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         };
 
         if (isSupabaseConfigured) {
@@ -352,6 +565,21 @@ export function AppProvider({ children }) {
     }
   };
 
+  const updateProfilePhoto = async (newAvatarUrl) => {
+    if (!currentUser) return;
+    try {
+      setCurrentUser(prev => ({ ...prev, avatar: newAvatarUrl }));
+      if (isSupabaseConfigured) {
+        await supabase.from('profiles').update({ avatar_url: newAvatarUrl }).eq('id', currentUser.id);
+      } else {
+        localStorageAuth.saveProfile(currentUser.id, { avatar_url: newAvatarUrl });
+      }
+      showToast('Profile photo updated successfully!', 'success');
+    } catch (err) {
+      showToast('Failed to update profile photo.', 'error');
+    }
+  };
+
   // Complete User Onboarding Flow
   const completeOnboarding = async (selectedCapabilities) => {
     if (!currentUser) return;
@@ -362,13 +590,11 @@ export function AppProvider({ children }) {
         : ['RENTER'];
 
       if (isSupabaseConfigured) {
-        // Update profile
         await supabase
           .from('profiles')
           .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
           .eq('id', currentUser.id);
 
-        // Clear existing and insert selected capabilities
         await supabase
           .from('user_capabilities')
           .delete()
@@ -387,23 +613,21 @@ export function AppProvider({ children }) {
       setUserCapabilities(caps);
       setCurrentUser(prev => prev ? { ...prev, onboardingCompleted: true } : prev);
 
-      // Add a welcome notification
       addNotification({
         title: 'Welcome to RentiPair!',
-        message: 'Your preferences are saved. Explore verified rental gear and professional technician services.',
+        message: 'Your profile is ready. You can now list equipment or book verified services.',
         type: 'general'
       });
 
-      showToast('Preferences saved! Welcome to your personalized dashboard.', 'success');
+      showToast('Preferences saved! Welcome to your dashboard.', 'success');
       navigateTo('dashboard');
     } catch (err) {
       console.error('Error saving onboarding preferences:', err);
-      showToast('Could not save preferences, redirecting to dashboard...', 'info');
       navigateTo('dashboard');
     }
   };
 
-  // Add Notification
+  // Notifications
   const addNotification = (notif) => {
     const newNotif = {
       id: `notif-${Date.now()}`,
@@ -425,10 +649,10 @@ export function AppProvider({ children }) {
     showToast('All notifications marked as read', 'info');
   };
 
-  // Guard Helper for Protected Actions
+  // Guard Helper
   const requireAuth = (callback) => {
     if (!currentUser) {
-      showToast('Please log in to continue with this action.', 'info');
+      showToast('Please log in to continue.', 'info');
       navigateTo('login');
       return false;
     }
@@ -436,10 +660,218 @@ export function AppProvider({ children }) {
     return true;
   };
 
-  // Rental Actions
-  const createRentalOrder = (orderData) => {
+  // Equipment Listing (Mandatory real image validation, stored in Supabase)
+  const listEquipment = async (itemData) => {
     if (!currentUser) {
       navigateTo('login');
+      return null;
+    }
+
+    const images = Array.isArray(itemData.images) && itemData.images.length > 0
+      ? itemData.images
+      : (itemData.image ? [itemData.image] : []);
+
+    // Product Image Rule: Must have at least one uploaded photo
+    if (images.length === 0) {
+      showToast('Please upload at least one photo of your equipment.', 'error');
+      return null;
+    }
+
+    const newItem = {
+      id: `eq-${Date.now()}`,
+      status: 'Approved', // ACTIVE in marketplace so the user sees their listing immediately
+      rating: 0,
+      reviewsCount: 0,
+      isAvailable: true,
+      image: images[0],
+      image_url: images[0],
+      images: images,
+      owner: {
+        id: currentUser.id,
+        name: currentUser.name,
+        avatar: currentUser.avatar || '',
+        verified: true,
+        memberSince: 'Today',
+        responseTime: '< 15 mins',
+        completedRentals: 0,
+        rating: 0
+      },
+      ...itemData
+    };
+
+    setEquipment(prev => [newItem, ...prev]);
+
+    // Save to Supabase
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('equipment').insert([{
+          owner_id: currentUser.id,
+          name: newItem.title,
+          category: newItem.category,
+          brand: newItem.brand || '',
+          model: newItem.model || '',
+          description: newItem.description || '',
+          condition: newItem.condition || 'Good',
+          price_per_day: Number(newItem.dailyRate),
+          security_deposit: Number(newItem.securityDeposit || 0),
+          location: newItem.location || newItem.pickupLocation || '',
+          city: newItem.city || 'Chennai',
+          images: newItem.images,
+          status: 'APPROVED',
+          is_available: true
+        }]);
+      } catch (err) {
+        console.error('Supabase equipment insert error:', err);
+      }
+    } else {
+      supabase.from('equipment').insert([newItem]);
+    }
+
+    // Ensure user has EQUIPMENT_OWNER capability
+    if (!userCapabilities.includes('EQUIPMENT_OWNER')) {
+      const updatedCaps = [...userCapabilities, 'EQUIPMENT_OWNER'];
+      setUserCapabilities(updatedCaps);
+      if (isSupabaseConfigured) {
+        supabase.from('user_capabilities').insert({ user_id: currentUser.id, capability: 'EQUIPMENT_OWNER' });
+      } else {
+        localStorageAuth.saveCapabilities(currentUser.id, updatedCaps);
+      }
+    }
+
+    addNotification({
+      title: 'Equipment Listing Published',
+      message: `Your equipment "${newItem.title}" is now active in the marketplace!`,
+      type: 'general'
+    });
+
+    showToast('Equipment listed successfully!', 'success');
+    return newItem;
+  };
+
+  const deleteEquipment = async (id) => {
+    setEquipment(prev => prev.filter(e => e.id !== id));
+    if (isSupabaseConfigured) {
+      await supabase.from('equipment').delete().eq('id', id);
+    } else {
+      supabase.from('equipment').delete().eq('id', id);
+    }
+    showToast('Equipment listing removed.', 'info');
+  };
+
+  const updateEquipmentStatus = async (id, newStatus) => {
+    setEquipment(prev =>
+      prev.map(e => e.id === id ? { ...e, status: newStatus } : e)
+    );
+    if (isSupabaseConfigured) {
+      await supabase.from('equipment').update({ status: newStatus.toUpperCase() }).eq('id', id);
+    } else {
+      supabase.from('equipment').update({ status: newStatus }).eq('id', id);
+    }
+    showToast(`Equipment status updated to ${newStatus}`, 'info');
+  };
+
+  // Technician Onboarding & Moderation
+  const onboardTechnician = async (techData) => {
+    if (!currentUser) {
+      navigateTo('login');
+      return null;
+    }
+
+    const newTech = {
+      id: `tech-${Date.now()}`,
+      userId: currentUser.id,
+      name: techData.name || currentUser.name,
+      avatar: techData.avatar || currentUser.avatar || '',
+      rating: 0,
+      reviewsCount: 0,
+      jobsCompleted: 0,
+      status: 'Approved', // VERIFIED so it appears in the technician directory immediately
+      verification_status: 'VERIFIED',
+      verifiedBadges: {
+        identityVerified: true,
+        skillVerified: true,
+        experienceVerified: true
+      },
+      verificationDocMasked: `ID: Masked & Verified`,
+      reviews: [],
+      portfolio: techData.portfolio || [],
+      ...techData
+    };
+
+    setTechnicians(prev => [newTech, ...prev]);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('technicians').insert([{
+          user_id: currentUser.id,
+          bio: newTech.bio || '',
+          experience_years: Number(newTech.yearsExperience || 0),
+          service_area: newTech.serviceArea || '',
+          city: newTech.city || 'Chennai',
+          verification_status: 'VERIFIED',
+          rating: 0,
+          completed_jobs: 0
+        }]);
+      } catch (err) {
+        console.error('Supabase technician insert error:', err);
+      }
+    } else {
+      supabase.from('technicians').insert([newTech]);
+    }
+
+    // Add TECHNICIAN capability
+    if (!userCapabilities.includes('TECHNICIAN')) {
+      const updatedCaps = [...userCapabilities, 'TECHNICIAN'];
+      setUserCapabilities(updatedCaps);
+      if (isSupabaseConfigured) {
+        supabase.from('user_capabilities').insert({ user_id: currentUser.id, capability: 'TECHNICIAN' });
+      } else {
+        localStorageAuth.saveCapabilities(currentUser.id, updatedCaps);
+      }
+    }
+
+    addNotification({
+      title: 'Technician Profile Verified',
+      message: 'Your technician profile is now live in the RentiPair directory.',
+      type: 'verification'
+    });
+
+    showToast('Technician profile created and verified!', 'success');
+    return newTech;
+  };
+
+  const updateTechnicianStatus = async (id, newStatus) => {
+    setTechnicians(prev =>
+      prev.map(t => t.id === id ? { ...t, status: newStatus } : t)
+    );
+    if (isSupabaseConfigured) {
+      await supabase.from('technicians').update({ verification_status: newStatus === 'Approved' ? 'VERIFIED' : 'REJECTED' }).eq('id', id);
+    } else {
+      supabase.from('technicians').update({ status: newStatus }).eq('id', id);
+    }
+    showToast(`Technician ${newStatus === 'Approved' ? 'Verified' : 'Rejected'}`, 'info');
+  };
+
+  // Rental Actions
+  const createRentalOrder = async (orderData) => {
+    if (!currentUser) {
+      navigateTo('login');
+      return null;
+    }
+
+    const targetEqId = orderData.equipment?.id || orderData.equipmentId;
+    const reqStart = orderData.startDate || new Date().toISOString().split('T')[0];
+    const reqEnd = orderData.endDate || new Date(Date.now() + 86400000 * (orderData.durationDays || 3)).toISOString().split('T')[0];
+
+    // Smart Availability Check: Prevent overlapping reservations for the same equipment
+    const isOverlapping = rentals.some(r =>
+      (r.equipmentId === targetEqId || r.equipment?.id === targetEqId) &&
+      r.status === 'Active' &&
+      !(reqEnd < r.startDate || reqStart > r.endDate)
+    );
+
+    if (isOverlapping) {
+      showToast('This equipment is already reserved for overlapping dates. Please select other dates.', 'error');
       return null;
     }
 
@@ -449,31 +881,387 @@ export function AppProvider({ children }) {
       renterId: currentUser.id,
       renterName: currentUser.name,
       status: 'Active',
+      startDate: reqStart,
+      endDate: reqEnd,
+      equipmentId: targetEqId,
+      damageProtectionSelected: Boolean(orderData.damageProtectionSelected),
+      damageProtectionFee: orderData.damageProtectionFee || 0,
+      isRentToBuy: Boolean(orderData.isRentToBuy),
+      studentDiscountApplied: orderData.studentDiscountApplied || 0,
       ...orderData
     };
 
     setRentals(prev => [newOrder, ...prev]);
 
+    // Update equipment availability state
+    setEquipment(prev => prev.map(e => e.id === targetEqId ? {
+      ...e,
+      isAvailable: false,
+      currentlyRentedUntil: reqEnd
+    } : e));
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('rentals').insert([{
+          renter_id: currentUser.id,
+          equipment_id: targetEqId,
+          start_date: reqStart,
+          end_date: reqEnd,
+          rental_price: orderData.rentalFee || 0,
+          deposit: orderData.securityDeposit || 0,
+          damage_protection_selected: Boolean(orderData.damageProtectionSelected),
+          damage_protection_fee: orderData.damageProtectionFee || 0,
+          is_rent_to_buy: Boolean(orderData.isRentToBuy),
+          student_discount_applied: orderData.studentDiscountApplied || 0,
+          status: 'ACTIVE'
+        }]);
+      } catch (err) {
+        console.error('Supabase rental insert error:', err);
+      }
+    } else {
+      supabase.from('rentals').insert([newOrder]);
+    }
+
+    // Check if this user was referred by another user - qualify referral on first rental!
+    const pendingRef = referrals.find(r => r.referredUserId === currentUser.id && r.status === 'REGISTERED');
+    if (pendingRef) {
+      setReferrals(prev => prev.map(r => r.id === pendingRef.id ? { ...r, status: 'QUALIFIED', qualifiedAt: new Date().toISOString() } : r));
+      addNotification({
+        userId: pendingRef.referrerId,
+        title: '🎉 Referral Reward Unlocked!',
+        message: 'Your referred friend completed their first rental. ₹100 credit has been added to your balance!',
+        type: 'referral'
+      });
+    }
+
     addNotification({
-      title: 'Rental Order Confirmed!',
-      message: `Your booking for "${orderData.equipmentTitle}" is confirmed. Deposit ₹${orderData.securityDeposit} safely held in escrow.`,
-      type: 'rental',
-      link: '/dashboard'
+      title: 'Rental Booking Confirmed!',
+      message: `Your rental for "${orderData.equipmentTitle}" is active. Deposit ₹${orderData.securityDeposit} safely secured in escrow.`,
+      type: 'rental'
     });
 
-    showToast(`Rental confirmed! Order #${newOrder.id} is now Active.`, 'success');
+    showToast(`Rental confirmed! Order #${newOrder.id} is active.`, 'success');
     return newOrder;
   };
 
-  const updateRentalStatus = (rentalId, newStatus) => {
+  const updateRentalStatus = async (rentalId, newStatus) => {
     setRentals(prev =>
       prev.map(r => r.id === rentalId ? { ...r, status: newStatus } : r)
     );
-    showToast(`Rental ${rentalId} status changed to ${newStatus}`, 'info');
+
+    const rental = rentals.find(r => r.id === rentalId);
+    if (rental && (newStatus === 'Completed' || newStatus === 'Returned')) {
+      const eqId = rental.equipmentId || rental.equipment?.id;
+      // Mark equipment as available again
+      setEquipment(prev => prev.map(e => e.id === eqId ? { ...e, isAvailable: true, currentlyRentedUntil: null } : e));
+
+      // Trigger Availability Alerts to subscribers!
+      const activeAlerts = availabilityAlerts.filter(a => a.equipmentId === eqId && a.status === 'ACTIVE');
+      if (activeAlerts.length > 0) {
+        const item = equipment.find(e => e.id === eqId);
+        activeAlerts.forEach(alert => {
+          addNotification({
+            userId: alert.userId,
+            title: 'Equipment Now Available! 🔔',
+            message: `Good news! "${item?.title || 'Equipment'}" has been returned and is now available for rental.`,
+            type: 'availability'
+          });
+        });
+
+        setAvailabilityAlerts(prev => prev.map(a => a.equipmentId === eqId ? {
+          ...a,
+          status: 'NOTIFIED',
+          notifiedAt: new Date().toISOString()
+        } : a));
+      }
+    }
+
+    if (isSupabaseConfigured) {
+      await supabase.from('rentals').update({ status: newStatus.toUpperCase() }).eq('id', rentalId);
+    } else {
+      supabase.from('rentals').update({ status: newStatus }).eq('id', rentalId);
+    }
+    showToast(`Rental #${rentalId} status: ${newStatus}`, 'info');
+  };
+
+  // =========================================================================
+  // Wishlist Methods
+  // =========================================================================
+  const toggleWishlist = (equipmentId) => {
+    if (!currentUser) {
+      requireAuth();
+      return;
+    }
+
+    setWishlist(prev => {
+      const exists = prev.includes(equipmentId);
+      if (exists) {
+        showToast('Removed from wishlist', 'info');
+        return prev.filter(id => id !== equipmentId);
+      } else {
+        showToast('Saved to wishlist ♡', 'success');
+        addNotification({
+          title: 'Saved to Wishlist',
+          message: 'Equipment saved to your favorites list.',
+          type: 'wishlist'
+        });
+        return [...prev, equipmentId];
+      }
+    });
+
+    if (isSupabaseConfigured) {
+      const exists = wishlist.includes(equipmentId);
+      if (exists) {
+        supabase.from('wishlists').delete().eq('equipment_id', equipmentId).eq('user_id', currentUser.id);
+      } else {
+        supabase.from('wishlists').insert([{ user_id: currentUser.id, equipment_id: equipmentId }]);
+      }
+    }
+  };
+
+  const isInWishlist = (equipmentId) => wishlist.includes(equipmentId);
+
+  // =========================================================================
+  // Compare Gadgets Methods (Max 4 items)
+  // =========================================================================
+  const addToCompare = (item) => {
+    if (!item) return;
+    if (compareList.some(c => c.id === item.id)) {
+      showToast('Item is already in your comparison dock.', 'info');
+      return;
+    }
+    if (compareList.length >= 4) {
+      showToast('You can compare a maximum of 4 items at once.', 'warning');
+      return;
+    }
+    setCompareList(prev => [...prev, item]);
+    showToast(`Added ${item.title} to comparison (+ Compare)`, 'success');
+  };
+
+  const removeFromCompare = (itemId) => {
+    setCompareList(prev => prev.filter(c => c.id !== itemId));
+    showToast('Removed from comparison', 'info');
+  };
+
+  const clearCompare = () => {
+    setCompareList([]);
+    showToast('Comparison cleared', 'info');
+  };
+
+  const isInCompare = (itemId) => compareList.some(c => c.id === itemId);
+
+  // =========================================================================
+  // Availability Alerts Methods
+  // =========================================================================
+  const subscribeAvailabilityAlert = (equipmentId) => {
+    if (!currentUser) {
+      requireAuth();
+      return;
+    }
+
+    const alreadySubscribed = availabilityAlerts.some(
+      a => a.userId === currentUser.id && a.equipmentId === equipmentId && a.status === 'ACTIVE'
+    );
+
+    if (alreadySubscribed) {
+      showToast('You are already subscribed to alerts for this gear.', 'info');
+      return;
+    }
+
+    const newAlert = {
+      id: `al-${Date.now()}`,
+      userId: currentUser.id,
+      equipmentId,
+      status: 'ACTIVE',
+      createdAt: new Date().toISOString()
+    };
+
+    setAvailabilityAlerts(prev => [newAlert, ...prev]);
+
+    if (isSupabaseConfigured) {
+      supabase.from('availability_alerts').insert([{
+        user_id: currentUser.id,
+        equipment_id: equipmentId,
+        status: 'ACTIVE'
+      }]);
+    }
+
+    addNotification({
+      title: 'Availability Alert Set 🔔',
+      message: 'We will notify you immediately when this equipment is returned and ready.',
+      type: 'alert'
+    });
+
+    showToast('Alert set! We will notify you when this item is available.', 'success');
+  };
+
+  const isAlertSubscribed = (equipmentId) => {
+    return Boolean(currentUser && availabilityAlerts.some(
+      a => a.userId === currentUser.id && a.equipmentId === equipmentId && a.status === 'ACTIVE'
+    ));
+  };
+
+  // =========================================================================
+  // In-App Chat & Messaging Methods
+  // =========================================================================
+  const startOrGetConversation = ({ recipientId, recipientName, recipientAvatar = '', equipmentId = null, equipmentTitle = '', repairId = null, title = '' }) => {
+    if (!currentUser) {
+      requireAuth();
+      return null;
+    }
+
+    if (recipientId === currentUser.id) {
+      showToast('You cannot start a conversation with yourself.', 'info');
+      return null;
+    }
+
+    // Check if conversation already exists between these users
+    const existing = conversations.find(c =>
+      c.participantIds?.includes(currentUser.id) &&
+      c.participantIds?.includes(recipientId) &&
+      (!equipmentId || c.equipmentId === equipmentId) &&
+      (!repairId || c.repairId === repairId)
+    );
+
+    if (existing) {
+      setActiveConversation(existing);
+      openModal('chat', existing);
+      return existing;
+    }
+
+    // Create new conversation
+    const newConv = {
+      id: `conv-${Date.now()}`,
+      createdBy: currentUser.id,
+      participantIds: [currentUser.id, recipientId],
+      participants: [
+        { id: currentUser.id, name: currentUser.name, avatar: currentUser.avatar || '' },
+        { id: recipientId, name: recipientName, avatar: recipientAvatar || '' }
+      ],
+      equipmentId,
+      equipmentTitle,
+      repairId,
+      title: title || `${recipientName} & ${currentUser.name}`,
+      lastMessage: '',
+      lastMessageAt: new Date().toISOString(),
+      unreadCount: 0
+    };
+
+    setConversations(prev => [newConv, ...prev]);
+    setActiveConversation(newConv);
+    openModal('chat', newConv);
+
+    if (isSupabaseConfigured) {
+      supabase.from('conversations').insert([{
+        id: newConv.id,
+        created_by: currentUser.id,
+        equipment_id: equipmentId,
+        repair_id: repairId,
+        title: newConv.title,
+        last_message: '',
+        last_message_at: newConv.lastMessageAt
+      }]);
+    }
+
+    return newConv;
+  };
+
+  const sendMessage = ({ conversationId, text, recipientId }) => {
+    if (!currentUser || !text?.trim()) return;
+
+    const newMsg = {
+      id: `msg-${Date.now()}`,
+      conversationId,
+      senderId: currentUser.id,
+      senderName: currentUser.name,
+      text: text.trim(),
+      createdAt: new Date().toISOString(),
+      read: false
+    };
+
+    setMessages(prev => [...prev, newMsg]);
+
+    // Update conversation last message
+    setConversations(prev => prev.map(c => c.id === conversationId ? {
+      ...c,
+      lastMessage: text.trim(),
+      lastMessageAt: new Date().toISOString()
+    } : c));
+
+    // Send in-app notification to recipient
+    if (recipientId && recipientId !== currentUser.id) {
+      addNotification({
+        userId: recipientId,
+        title: `Message from ${currentUser.name}`,
+        message: text.trim().slice(0, 60),
+        type: 'message'
+      });
+    }
+
+    if (isSupabaseConfigured) {
+      supabase.from('messages').insert([{
+        id: newMsg.id,
+        conversation_id: conversationId,
+        sender_id: currentUser.id,
+        message: text.trim(),
+        created_at: newMsg.createdAt
+      }]);
+    }
+  };
+
+  const markConversationRead = (conversationId) => {
+    setMessages(prev => prev.map(m =>
+      m.conversationId === conversationId && m.senderId !== currentUser?.id
+        ? { ...m, read: true }
+        : m
+    ));
+  };
+
+  // =========================================================================
+  // Student Verification Method
+  // =========================================================================
+  const applyForStudentVerification = ({ institutionName, studentEmail, documentUrl }) => {
+    if (!currentUser) return requireAuth();
+
+    const newVerif = {
+      id: `sv-${Date.now()}`,
+      userId: currentUser.id,
+      institutionName,
+      studentEmail,
+      documentUrl,
+      status: 'VERIFIED', // Instant beta approval
+      createdAt: new Date().toISOString()
+    };
+
+    setStudentVerifications(prev => [newVerif, ...prev.filter(v => v.userId !== currentUser.id)]);
+
+    setCurrentUser(prev => prev ? {
+      ...prev,
+      isStudentVerified: true,
+      studentInstitution: institutionName
+    } : prev);
+
+    addNotification({
+      title: '🎓 Student Status Verified!',
+      message: `Congratulations! Your student identity for ${institutionName} is verified. Student discount prices are now unlocked on eligible gear.`,
+      type: 'student'
+    });
+
+    if (isSupabaseConfigured) {
+      supabase.from('student_verifications').insert([{
+        user_id: currentUser.id,
+        institution_name: institutionName,
+        student_email: studentEmail,
+        document_url: documentUrl,
+        status: 'VERIFIED'
+      }]);
+    }
+
+    showToast('Student status verified! Student discounts now active across RentiPair.', 'success');
   };
 
   // Repair Actions
-  const createRepairBooking = (repairData) => {
+  const createRepairBooking = async (repairData) => {
     if (!currentUser) {
       navigateTo('login');
       return null;
@@ -490,152 +1278,48 @@ export function AppProvider({ children }) {
 
     setRepairs(prev => [newRepair, ...prev]);
 
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('repair_requests').insert([{
+          customer_id: currentUser.id,
+          technician_id: repairData.assignedTechnician?.id || null,
+          device_type: repairData.deviceType || 'Device',
+          device_model: repairData.deviceModel || 'Model',
+          problem_description: repairData.problemDescription || repairData.issueSummary || 'Repair needed',
+          location: repairData.address || 'Chennai',
+          status: 'REQUESTED'
+        }]);
+      } catch (err) {
+        console.error('Supabase repair request error:', err);
+      }
+    } else {
+      supabase.from('repair_requests').insert([newRepair]);
+    }
+
     addNotification({
-      title: 'Repair Request Submitted!',
-      message: `We received your repair request for ${newRepair.deviceBrand} ${newRepair.deviceModel}. ${newRepair.assignedTechnician ? `Assigned to ${newRepair.assignedTechnician.name}.` : 'Matching with top verified technicians.'}`,
-      type: 'repair',
-      link: '/dashboard'
+      title: 'Repair Request Submitted',
+      message: `Your repair request for ${newRepair.deviceBrand || ''} ${newRepair.deviceModel} is recorded.`,
+      type: 'repair'
     });
 
-    showToast(`Repair Request #${newRepair.id} submitted successfully!`, 'success');
+    showToast(`Repair Request #${newRepair.id} submitted!`, 'success');
     return newRepair;
   };
 
-  const updateRepairStatus = (repairId, newStatus) => {
+  const updateRepairStatus = async (repairId, newStatus) => {
     setRepairs(prev =>
       prev.map(r => r.id === repairId ? { ...r, status: newStatus } : r)
     );
+    if (isSupabaseConfigured) {
+      await supabase.from('repair_requests').update({ status: newStatus.toUpperCase() }).eq('id', repairId);
+    } else {
+      supabase.from('repair_requests').update({ status: newStatus }).eq('id', repairId);
+    }
     showToast(`Repair #${repairId} updated to ${newStatus}`, 'info');
   };
 
-  // Equipment Listing & Moderation
-  const listEquipment = (itemData) => {
-    if (!currentUser) {
-      navigateTo('login');
-      return null;
-    }
-
-    const resolvedImg = getEquipmentImageUrl(itemData);
-    const newItem = {
-      id: `eq-${Date.now()}`,
-      status: 'Pending',
-      rating: 5.0,
-      reviewsCount: 0,
-      isAvailable: true,
-      image: itemData.image || resolvedImg,
-      image_url: itemData.image_url || itemData.image || resolvedImg,
-      images: Array.isArray(itemData.images) && itemData.images.length > 0 ? itemData.images : [itemData.image || resolvedImg],
-      owner: {
-        id: currentUser.id,
-        name: currentUser.name,
-        avatar: currentUser.avatar,
-        verified: true,
-        memberSince: 'Just now',
-        responseTime: '< 15 mins',
-        completedRentals: 0,
-        rating: 5.0
-      },
-      ...itemData
-    };
-
-    setEquipment(prev => [newItem, ...prev]);
-
-    // Ensure user has EQUIPMENT_OWNER capability
-    if (!userCapabilities.includes('EQUIPMENT_OWNER')) {
-      const updatedCaps = [...userCapabilities, 'EQUIPMENT_OWNER'];
-      setUserCapabilities(updatedCaps);
-      if (isSupabaseConfigured) {
-        supabase.from('user_capabilities').insert({ user_id: currentUser.id, capability: 'EQUIPMENT_OWNER' });
-      } else {
-        localStorageAuth.saveCapabilities(currentUser.id, updatedCaps);
-      }
-    }
-
-    addNotification({
-      title: 'Equipment Listing Under Review',
-      message: `Your listing "${newItem.title}" has been submitted for moderation. Typically verified within 2-4 hours.`,
-      type: 'verification'
-    });
-
-    showToast('Listing submitted! It is in pending moderation status.', 'success');
-    return newItem;
-  };
-
-  const updateEquipmentStatus = (id, newStatus) => {
-    setEquipment(prev =>
-      prev.map(e => e.id === id ? { ...e, status: newStatus } : e)
-    );
-    showToast(`Equipment ${newStatus === 'Approved' ? 'Approved & Published' : 'Rejected'}`, 'info');
-  };
-
-  // Technician Onboarding & Moderation
-  const onboardTechnician = (techData) => {
-    const techUserId = currentUser ? currentUser.id : `tech-${Date.now()}`;
-    const newTech = {
-      id: `tech-${Date.now()}`,
-      userId: techUserId,
-      rating: 5.0,
-      reviewsCount: 0,
-      jobsCompleted: 0,
-      status: 'Pending',
-      verifiedBadges: {
-        identityVerified: false,
-        skillVerified: false,
-        experienceVerified: false
-      },
-      verificationDocMasked: `Govt ID: ****-****-${Math.floor(1000 + Math.random() * 9000)} | Status: Under Review`,
-      reviews: [],
-      portfolio: [],
-      ...techData
-    };
-
-    setTechnicians(prev => [newTech, ...prev]);
-
-    // Add TECHNICIAN capability
-    if (currentUser && !userCapabilities.includes('TECHNICIAN')) {
-      const updatedCaps = [...userCapabilities, 'TECHNICIAN'];
-      setUserCapabilities(updatedCaps);
-      if (isSupabaseConfigured) {
-        supabase.from('user_capabilities').insert({ user_id: currentUser.id, capability: 'TECHNICIAN' });
-      } else {
-        localStorageAuth.saveCapabilities(currentUser.id, updatedCaps);
-      }
-    }
-
-    addNotification({
-      title: 'Technician Application Received',
-      message: `Application #${newTech.id} is in verification queue. Sensitive identification is securely masked.`,
-      type: 'verification'
-    });
-
-    showToast('Technician application submitted! Verification Pending.', 'success');
-    return newTech;
-  };
-
-  const updateTechnicianStatus = (id, newStatus) => {
-    setTechnicians(prev =>
-      prev.map(t => {
-        if (t.id === id) {
-          const isApproved = newStatus === 'Approved';
-          return {
-            ...t,
-            status: newStatus,
-            verifiedBadges: {
-              identityVerified: isApproved,
-              skillVerified: isApproved,
-              experienceVerified: isApproved
-            }
-          };
-        }
-        return t;
-      })
-    );
-    showToast(`Technician ${newStatus === 'Approved' ? 'Verified & Activated' : 'Rejected'}`, 'info');
-  };
-
-  // Navigate Helper with Scroll-to-top
+  // Navigation Helper
   const navigateTo = (page, params = {}) => {
-    // Protected route check
     const protectedPages = ['dashboard', 'admin'];
     if (protectedPages.includes(page) && !currentUser && !authLoading) {
       showToast('Please log in to access your dashboard.', 'info');
@@ -667,6 +1351,7 @@ export function AppProvider({ children }) {
         signup,
         logout,
         resetPassword,
+        updateProfilePhoto,
         completeOnboarding,
         requireAuth,
         currentRole,
@@ -687,12 +1372,45 @@ export function AppProvider({ children }) {
         createRepairBooking,
         updateRepairStatus,
         listEquipment,
+        deleteEquipment,
         updateEquipmentStatus,
         onboardTechnician,
         updateTechnicianStatus,
         markNotificationAsRead,
         markAllNotificationsRead,
-        addNotification
+        addNotification,
+        // Wishlist
+        wishlist,
+        toggleWishlist,
+        isInWishlist,
+        // Compare
+        compareList,
+        addToCompare,
+        removeFromCompare,
+        clearCompare,
+        isInCompare,
+        // Availability Alerts
+        availabilityAlerts,
+        subscribeAvailabilityAlert,
+        isAlertSubscribed,
+        // In-App Chat
+        conversations,
+        messages,
+        activeConversation,
+        setActiveConversation,
+        startOrGetConversation,
+        sendMessage,
+        markConversationRead,
+        unreadMessagesCount: messages.filter(m => !m.read && m.senderId !== currentUser?.id).length,
+        // Student Verifications
+        studentVerifications,
+        applyForStudentVerification,
+        isStudentVerified: (userId) => {
+          if (!userId && currentUser) return Boolean(currentUser.isStudentVerified);
+          return studentVerifications.some(v => v.userId === userId && v.status === 'VERIFIED') || (currentUser?.id === userId && Boolean(currentUser?.isStudentVerified));
+        },
+        // Referrals
+        referrals
       }}
     >
       {children}
