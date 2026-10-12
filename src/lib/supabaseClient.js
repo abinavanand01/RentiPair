@@ -340,7 +340,59 @@ export const supabase = isSupabaseConfigured
             })
           })
         };
+      },
+      storage: {
+        from(bucket) {
+          return {
+            upload: async (path, file) => {
+              return { data: { path }, error: null };
+            },
+            getPublicUrl: (path) => {
+              return { data: { publicUrl: path } };
+            },
+            remove: async (paths) => {
+              return { data: paths, error: null };
+            }
+          };
+        }
       }
     };
+
+/**
+ * Checks actual connection to Supabase database with an active request
+ */
+export async function checkSupabaseConnection() {
+  if (!isSupabaseConfigured) {
+    return {
+      connected: false,
+      status: 'NOT_CONFIGURED',
+      message: 'VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are not configured in .env'
+    };
+  }
+
+  try {
+    const { data, error } = await supabase.from('profiles').select('id').limit(1);
+    if (error) {
+      return {
+        connected: false,
+        status: 'ERROR',
+        message: error.message || 'Database query failed',
+        error
+      };
+    }
+    return {
+      connected: true,
+      status: 'CONNECTED',
+      message: 'Supabase database connected and responsive.'
+    };
+  } catch (err) {
+    return {
+      connected: false,
+      status: 'NETWORK_ERROR',
+      message: err.message || 'Network error reaching Supabase',
+      error: err
+    };
+  }
+}
 
 export { localStorageAuth };

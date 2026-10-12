@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { Mail, Lock, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle, Wrench, Box } from 'lucide-react';
 
 export default function LoginPage() {
-  const { login, navigateTo, openModal, showToast } = useApp();
+  const { login, navigateTo, openModal, showToast, intendedDestination } = useApp();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -240,6 +240,33 @@ export default function LoginPage() {
               Log in to manage your rentals, repair requests, and listings.
             </p>
           </div>
+
+          {/* Intended Destination Context Banner */}
+          {intendedDestination && (
+            <div style={{
+              background: 'rgba(59, 130, 246, 0.12)',
+              border: '1.5px solid rgba(59, 130, 246, 0.4)',
+              borderRadius: '12px',
+              padding: '12px 14px',
+              marginBottom: '18px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <AlertCircle size={20} color="#60A5FA" style={{ flexShrink: 0 }} />
+              <div style={{ fontSize: '13px', color: '#BFDBFE', lineHeight: 1.4 }}>
+                {intendedDestination.modal === 'listEquipment' && (
+                  <span><strong>Action Required:</strong> Please log in to list your equipment. Your listing form will open immediately after login.</span>
+                )}
+                {intendedDestination.modal === 'becomeTechnician' && (
+                  <span><strong>Action Required:</strong> Please log in to apply as a verified technician. Your application form will open immediately after login.</span>
+                )}
+                {intendedDestination.view && (
+                  <span><strong>Action Required:</strong> Please log in to access your account dashboard and manage your marketplace activity.</span>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Quick Admin Access */}
           <div style={{

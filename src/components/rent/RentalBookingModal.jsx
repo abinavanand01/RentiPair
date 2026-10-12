@@ -561,7 +561,7 @@ export default function RentalBookingModal() {
             }}>
               <div style={{ marginBottom: '6px' }}><strong style={{ color: '#FFFFFF' }}>Item:</strong> <span style={{ color: '#CBD5E1' }}>{item.title}</span></div>
               <div style={{ marginBottom: '6px' }}><strong style={{ color: '#FFFFFF' }}>Return Deadline:</strong> <span style={{ color: '#CBD5E1' }}>{endDateStr}</span></div>
-              <div style={{ marginBottom: '6px' }}><strong style={{ color: '#FFFFFF' }}>Owner Handover Contact:</strong> <span style={{ color: '#CBD5E1' }}>{item.owner.name} (+91 98401 22890)</span></div>
+              <div style={{ marginBottom: '6px' }}><strong style={{ color: '#FFFFFF' }}>Owner Handover Contact:</strong> <span style={{ color: '#CBD5E1' }}>{item.owner?.name || 'Verified Owner'} (+91 98401 22890)</span></div>
               <div><strong style={{ color: '#FFFFFF' }}>Tracking ID:</strong> <code style={{ color: '#60A5FA' }}>{createdOrder?.trackingId}</code></div>
             </div>
 

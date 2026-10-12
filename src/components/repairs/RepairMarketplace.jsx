@@ -26,7 +26,7 @@ export default function RepairMarketplace() {
   const cities = ['all', 'Chennai', 'Bengaluru', 'Hyderabad', 'Mumbai', 'Pune'];
 
   const filteredTechnicians = technicians
-    .filter(t => t.status === 'Approved')
+    .filter(t => t.status === 'Approved' || t.verification_status === 'VERIFIED')
     .filter(t => {
       if (!searchQuery) return true;
       const q = searchQuery.toLowerCase();
@@ -258,7 +258,7 @@ export default function RepairMarketplace() {
 
         {/* Technician Cards Grid or Empty State */}
         {filteredTechnicians.length === 0 ? (
-          technicians.filter(t => t.status === 'Approved').length === 0 ? (
+          technicians.filter(t => t.status === 'Approved' || t.verification_status === 'VERIFIED').length === 0 ? (
             <div style={{
               background: 'rgba(14, 19, 48, 0.7)',
               backdropFilter: 'blur(16px)',
@@ -273,7 +273,7 @@ export default function RepairMarketplace() {
             }}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔧</div>
               <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF', marginBottom: '8px' }}>
-                No verified technicians yet.
+                No verified technicians available yet.
               </h3>
               <p style={{ fontSize: '14.5px', color: '#94A3B8', lineHeight: 1.5, marginBottom: '24px' }}>
                 Become one of the first professionals on RentiPair.

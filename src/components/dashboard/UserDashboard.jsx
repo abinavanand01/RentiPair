@@ -808,10 +808,10 @@ export default function UserDashboard() {
                           fontWeight: 700,
                           padding: '3px 10px',
                           borderRadius: '999px',
-                          background: item.status === 'Approved' ? '#ECFDF5' : '#FEF3C7',
-                          color: item.status === 'Approved' ? '#059669' : '#B45309'
+                          background: (item.status === 'Approved' || item.status === 'APPROVED') ? '#ECFDF5' : '#FEF3C7',
+                          color: (item.status === 'Approved' || item.status === 'APPROVED') ? '#059669' : '#B45309'
                         }}>
-                          {item.status === 'Approved' ? 'LIVE & PUBLISHED' : 'MODERATION PENDING'}
+                          {(item.status === 'Approved' || item.status === 'APPROVED') ? 'LIVE & PUBLISHED' : 'MODERATION PENDING'}
                         </span>
                       </div>
                     ))}

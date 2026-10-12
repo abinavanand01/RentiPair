@@ -21,7 +21,6 @@ import ForgotPasswordModal from './components/auth/ForgotPasswordModal';
 
 // Home Page Components
 import Hero from './components/home/Hero';
-import CategoriesSection from './components/home/CategoriesSection';
 import FeaturedEquipment from './components/home/FeaturedEquipment';
 import VerifiedTechnicians from './components/home/VerifiedTechnicians';
 import HowItWorks from './components/home/HowItWorks';
@@ -59,7 +58,6 @@ function MainApp() {
         {currentPage === 'home' && (
           <>
             <Hero />
-            <CategoriesSection />
             <FeaturedEquipment />
             <VerifiedTechnicians />
             <HowItWorks />

@@ -16,15 +16,29 @@ import {
   MapPin,
   Briefcase,
   FileCheck,
+  FileText,
   Camera,
-  AlertCircle
+  AlertCircle,
+  Loader2,
+  Image as ImageIcon
 } from 'lucide-react';
 
 export default function BecomeTechnicianModal() {
-  const { modalState, closeModal, onboardTechnician, currentUser } = useApp();
+  const { modalState, closeModal, onboardTechnician, currentUser, navigateTo } = useApp();
   const [currentStep, setCurrentStep] = useState(1); // 1 through 7
   const [errorMsg, setErrorMsg] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // File Objects
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [verificationDocFile, setVerificationDocFile] = useState(null);
+  const [portfolioFiles, setPortfolioFiles] = useState([]);
+  const [portfolioPreviews, setPortfolioPreviews] = useState([]);
+
   const avatarInputRef = useRef(null);
+  const docInputRef = useRef(null);
+  const portfolioInputRef = useRef(null);
 
   const [formData, setFormData] = useState(() => ({
     // Step 1: Personal
@@ -74,6 +88,16 @@ export default function BecomeTechnicianModal() {
   const handleAvatarFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setErrorMsg('Please select a valid image file (JPEG, PNG, WebP).');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg('Profile photo must be less than 5MB.');
+      return;
+    }
+    setAvatarFile(file);
+    setErrorMsg('');
     const reader = new FileReader();
     reader.onload = (ev) => {
       setFormData(prev => ({ ...prev, avatar: ev.target.result }));
@@ -81,26 +105,89 @@ export default function BecomeTechnicianModal() {
     reader.readAsDataURL(file);
   };
 
-  const handleFinalSubmit = () => {
-    onboardTechnician({
-      name: formData.fullName || currentUser?.name || 'Technician',
-      title: formData.specialization || 'Electronics Repair Specialist',
-      avatar: formData.avatar || currentUser?.avatar || '',
-      yearsExperience: Number(formData.yearsExperience || 0),
-      baseRate: 399,
-      serviceArea: formData.serviceArea || formData.city,
-      city: formData.city,
-      categories: formData.selectedServices.length > 0 ? formData.selectedServices : ['Electronics Repair'],
-      verificationDocMasked: formData.idNumberMasked ? `Govt ID: ${formData.idNumberMasked}` : 'ID Verification Pending',
-      bio: formData.portfolioSample || `${formData.specialization}. ${formData.yearsExperience} years experience at ${formData.workshopName || formData.city}.`
-    });
+  const handleDocFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorMsg('Document file size must be less than 10MB.');
+      return;
+    }
+    setVerificationDocFile(file);
+    setFormData(prev => ({ ...prev, certUploadName: file.name }));
+    setErrorMsg('');
+  };
 
-    setCurrentStep(8); // Completed state
+  const handlePortfolioFiles = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    const validFiles = files.filter(f => f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024);
+    if (validFiles.length < files.length) {
+      setErrorMsg('Some files were skipped. Images must be under 5MB.');
+    }
+    setPortfolioFiles(prev => [...prev, ...validFiles]);
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setPortfolioPreviews(prev => [...prev, ev.target.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const validateStep1 = () => {
+    const errors = {};
+    if (!formData.fullName.trim()) errors.fullName = 'Full name is required.';
+    if (!formData.email.trim()) errors.email = 'Email address is required.';
+    if (!formData.phone.trim()) errors.phone = 'Mobile number is required.';
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setErrorMsg(Object.values(errors)[0]);
+      return false;
+    }
+    setErrorMsg('');
+    return true;
+  };
+
+  const handleFinalSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      await onboardTechnician({
+        name: formData.fullName || currentUser?.name || 'Technician',
+        title: formData.specialization || 'Electronics Repair Specialist',
+        specialization: formData.specialization || 'Electronics Repair Specialist',
+        avatar: formData.avatar || currentUser?.avatar || '',
+        avatarFile: avatarFile,
+        yearsExperience: Number(formData.yearsExperience || 0),
+        baseRate: 399,
+        serviceArea: formData.serviceArea || formData.city,
+        city: formData.city,
+        categories: formData.selectedServices.length > 0 ? formData.selectedServices : ['Electronics Repair'],
+        verificationDocMasked: formData.idNumberMasked ? `${formData.idType}: ${formData.idNumberMasked}` : 'ID Verification Submitted',
+        verificationDocFile: verificationDocFile,
+        portfolioFiles: portfolioFiles,
+        bio: formData.portfolioSample || `${formData.specialization}. ${formData.yearsExperience} years experience at ${formData.workshopName || formData.city}.`
+      });
+
+      setIsSubmitting(false);
+      setCurrentStep(8); // Completed state
+    } catch (err) {
+      setIsSubmitting(false);
+      setErrorMsg(err.message || 'Error submitting application. Please try again.');
+    }
   };
 
   const resetAndClose = () => {
     setCurrentStep(1);
     setErrorMsg('');
+    setFieldErrors({});
+    setIsSubmitting(false);
+    setAvatarFile(null);
+    setVerificationDocFile(null);
+    setPortfolioFiles([]);
+    setPortfolioPreviews([]);
     closeModal('becomeTechnician');
   };
 
@@ -208,7 +295,13 @@ export default function BecomeTechnicianModal() {
                   onChange={e => setFormData({ ...formData, fullName: e.target.value })}
                   placeholder="e.g. Suresh Kumar"
                   required
+                  style={{ borderColor: fieldErrors.fullName ? '#EF4444' : undefined }}
                 />
+                {fieldErrors.fullName && (
+                  <span style={{ color: '#F87171', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {fieldErrors.fullName}
+                  </span>
+                )}
               </div>
 
               <div className="form-group">
@@ -220,7 +313,13 @@ export default function BecomeTechnicianModal() {
                   onChange={e => setFormData({ ...formData, email: e.target.value })}
                   placeholder="name@example.com"
                   required
+                  style={{ borderColor: fieldErrors.email ? '#EF4444' : undefined }}
                 />
+                {fieldErrors.email && (
+                  <span style={{ color: '#F87171', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {fieldErrors.email}
+                  </span>
+                )}
               </div>
 
               <div className="form-group">
@@ -232,7 +331,13 @@ export default function BecomeTechnicianModal() {
                   onChange={e => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="e.g. +91 98765 43210"
                   required
+                  style={{ borderColor: fieldErrors.phone ? '#EF4444' : undefined }}
                 />
+                {fieldErrors.phone && (
+                  <span style={{ color: '#F87171', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {fieldErrors.phone}
+                  </span>
+                )}
               </div>
 
               <div className="form-group">
@@ -253,11 +358,7 @@ export default function BecomeTechnicianModal() {
 
             <button
               onClick={() => {
-                if (!formData.fullName.trim()) {
-                  alert('Please enter your full name.');
-                  return;
-                }
-                setCurrentStep(2);
+                if (validateStep1()) setCurrentStep(2);
               }}
               className="btn btn-orange"
               style={{ width: '100%', marginTop: '12px' }}
@@ -485,6 +586,42 @@ export default function BecomeTechnicianModal() {
               />
             </div>
 
+            {/* Document File Upload */}
+            <div className="form-group" style={{ marginTop: '12px' }}>
+              <label className="form-label">Upload Verification Document (ID or Certificate) *</label>
+              <input
+                type="file"
+                ref={docInputRef}
+                accept=".pdf,image/png,image/jpeg,image/webp"
+                onChange={handleDocFile}
+                style={{ display: 'none' }}
+              />
+              <div
+                onClick={() => docInputRef.current?.click()}
+                style={{
+                  border: '2px dashed rgba(255, 255, 255, 0.15)',
+                  borderRadius: '10px',
+                  padding: '16px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: verificationDocFile ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                  transition: 'border-color 0.2s'
+                }}
+              >
+                {verificationDocFile ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#10B981' }}>
+                    <FileCheck size={20} />
+                    <span style={{ fontSize: '13px', fontWeight: 600 }}>{verificationDocFile.name} ({(verificationDocFile.size / 1024).toFixed(1)} KB)</span>
+                  </div>
+                ) : (
+                  <div style={{ color: '#94A3B8' }}>
+                    <Upload size={20} style={{ margin: '0 auto 6px', display: 'block', color: '#3B82F6' }} />
+                    <span style={{ fontSize: '12.5px', fontWeight: 600 }}>Click to upload PDF or image scan (Max 10MB)</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
               <button onClick={() => setCurrentStep(4)} className="btn btn-outline" style={{ flex: 1 }}>
                 Back
@@ -510,8 +647,48 @@ export default function BecomeTechnicianModal() {
                 value={formData.portfolioSample}
                 onChange={e => setFormData({ ...formData, portfolioSample: e.target.value })}
                 placeholder="Describe types of repairs you handle, tools you use, or experience with specific devices..."
-                style={{ minHeight: '80px' }}
+                style={{ minHeight: '70px' }}
               />
+            </div>
+
+            {/* Portfolio Photo Upload */}
+            <div className="form-group" style={{ marginTop: '12px' }}>
+              <label className="form-label">Repair Portfolio Photos (Optional)</label>
+              <input
+                type="file"
+                ref={portfolioInputRef}
+                accept="image/*"
+                multiple
+                onChange={handlePortfolioFiles}
+                style={{ display: 'none' }}
+              />
+              <div
+                onClick={() => portfolioInputRef.current?.click()}
+                style={{
+                  border: '2px dashed rgba(255, 255, 255, 0.15)',
+                  borderRadius: '10px',
+                  padding: '14px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: 'rgba(255, 255, 255, 0.02)'
+                }}
+              >
+                <ImageIcon size={18} style={{ margin: '0 auto 4px', display: 'block', color: '#F97316' }} />
+                <span style={{ fontSize: '12px', color: '#94A3B8' }}>Click to add photos of repairs or workbench</span>
+              </div>
+
+              {portfolioPreviews.length > 0 && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
+                  {portfolioPreviews.map((src, i) => (
+                    <img
+                      key={i}
+                      src={src}
+                      alt="portfolio"
+                      style={{ width: '48px', height: '48px', borderRadius: '6px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
@@ -551,12 +728,31 @@ export default function BecomeTechnicianModal() {
             </div>
 
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setCurrentStep(6)} className="btn btn-outline" style={{ flex: 1 }}>
+              <button
+                onClick={() => setCurrentStep(6)}
+                className="btn btn-outline"
+                style={{ flex: 1 }}
+                disabled={isSubmitting}
+              >
                 Back
               </button>
-              <button onClick={handleFinalSubmit} className="btn btn-orange" style={{ flex: 2 }}>
-                <CheckCircle size={16} />
-                <span>Submit Verification Application</span>
+              <button
+                onClick={handleFinalSubmit}
+                className="btn btn-orange"
+                style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Submitting Application...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={16} />
+                    <span>Submit Verification Application</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -592,19 +788,33 @@ export default function BecomeTechnicianModal() {
               textTransform: 'uppercase',
               marginBottom: '10px'
             }}>
-              Application Received
+              PENDING ADMIN VERIFICATION
             </div>
 
             <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#FFFFFF', marginBottom: '8px' }}>
-              Technician Profile Active!
+              Application Successfully Submitted!
             </h3>
 
-            <p style={{ fontSize: '14px', color: '#94A3B8', maxWidth: '480px', margin: '0 auto 24px', lineHeight: 1.5 }}>
-              Thank you for applying, {formData.fullName}. Your technician profile has been registered in the RentiPair directory.
+            <p style={{ fontSize: '14px', color: '#94A3B8', maxWidth: '500px', margin: '0 auto 24px', lineHeight: 1.5 }}>
+              Thank you for applying, <strong>{formData.fullName}</strong>. Your technician application, verification documents, and repair details have been saved. An administrator will review your credentials before public listing in the marketplace.
             </p>
 
-            <div>
-              <button onClick={resetAndClose} className="btn btn-primary" style={{ minWidth: '160px' }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => {
+                  resetAndClose();
+                  navigateTo('dashboard', { tab: 'repairs' });
+                }}
+                className="btn btn-primary"
+                style={{ minWidth: '170px' }}
+              >
+                View in Dashboard
+              </button>
+              <button
+                onClick={resetAndClose}
+                className="btn btn-outline"
+                style={{ minWidth: '140px' }}
+              >
                 Done
               </button>
             </div>

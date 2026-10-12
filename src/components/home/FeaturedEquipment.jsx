@@ -19,14 +19,14 @@ export default function FeaturedEquipment() {
   const filterOptions = ['All', 'Scientific Calculators', 'Cameras', 'Laptops', 'Electronics', 'Tools'];
 
   const filteredItems = equipment
-    .filter(item => item.status === 'Approved')
+    .filter(item => item.status === 'Approved' || item.status === 'APPROVED')
     .filter(item => selectedFilter === 'All' || item.category === selectedFilter)
     .slice(0, 6);
 
   return (
     <section style={{
       padding: '80px 0',
-      background: 'linear-gradient(180deg, #0A0F24 0%, #0C1128 100%)',
+      background: 'linear-gradient(180deg, #0C1128 0%, #0A0F24 50%, #0C1128 100%)',
       position: 'relative'
     }}>
       <div className="container">

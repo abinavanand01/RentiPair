@@ -7,6 +7,12 @@ import {
   INITIAL_NOTIFICATIONS
 } from '../data/mockData';
 import { supabase, isSupabaseConfigured, localStorageAuth } from '../lib/supabaseClient';
+import {
+  uploadEquipmentImage,
+  uploadProfileAvatar,
+  uploadTechnicianPortfolio,
+  uploadTechnicianVerificationDoc
+} from '../lib/storageHelper';
 
 const AppContext = createContext();
 
@@ -14,6 +20,9 @@ export function AppProvider({ children }) {
   // Navigation & Page State ('home', 'rent', 'repairs', 'dashboard', 'admin', 'login', 'signup', 'onboarding')
   const [currentPage, setCurrentPage] = useState('home');
   const [pageParams, setPageParams] = useState({});
+
+  // Intended Destination after login (e.g. { modal: 'listEquipment' } or { modal: 'becomeTechnician' })
+  const [intendedDestination, setIntendedDestination] = useState(null);
 
   // Real Supabase Auth State
   const [session, setSession] = useState(null);
@@ -235,6 +244,22 @@ export function AppProvider({ children }) {
   });
 
   const openModal = (name, data = null) => {
+    // Require Login Before Adding Equipment
+    if (name === 'listEquipment' && !currentUser) {
+      showToast('Please log in before listing equipment.', 'info');
+      setIntendedDestination({ modal: 'listEquipment', data });
+      navigateTo('login');
+      return;
+    }
+
+    // Require Login Before Becoming a Technician
+    if (name === 'becomeTechnician' && !currentUser) {
+      showToast('Please log in before applying as a technician.', 'info');
+      setIntendedDestination({ modal: 'becomeTechnician', data });
+      navigateTo('login');
+      return;
+    }
+
     setModalState(prev => ({
       ...prev,
       [name]: { open: true, data: data, ...(typeof data === 'object' ? data : {}) }
@@ -473,7 +498,16 @@ export function AppProvider({ children }) {
 
       showToast(`Welcome back, ${data.user.user_metadata?.full_name || data.user.email}!`, 'success');
 
-      if (!isOnboardingDone) {
+      // Preserve and continue to intended destination if user clicked List Equipment / Become Tech
+      if (intendedDestination) {
+        const dest = intendedDestination;
+        setIntendedDestination(null);
+        if (dest.modal) {
+          openModal(dest.modal, dest.data);
+        } else if (dest.page) {
+          navigateTo(dest.page, dest.params);
+        }
+      } else if (!isOnboardingDone) {
         navigateTo('onboarding');
       } else {
         navigateTo('dashboard');
@@ -527,10 +561,28 @@ export function AppProvider({ children }) {
           localStorageAuth.saveCapabilities(data.user.id, ['RENTER']);
         }
 
+        // Handle Email Verification if enabled on Supabase
+        if (!data.session) {
+          showToast('Account created! Please check your email to verify your registration before logging in.', 'info');
+          navigateTo('login');
+          return { success: true };
+        }
+
         setSession(data.session);
         await loadUserData(data.session);
         showToast('Account created successfully! Welcome to RentiPair.', 'success');
-        navigateTo('onboarding');
+
+        if (intendedDestination) {
+          const dest = intendedDestination;
+          setIntendedDestination(null);
+          if (dest.modal) {
+            openModal(dest.modal, dest.data);
+          } else if (dest.page) {
+            navigateTo(dest.page, dest.params);
+          }
+        } else {
+          navigateTo('onboarding');
+        }
       }
 
       return { success: true };
@@ -546,6 +598,7 @@ export function AppProvider({ children }) {
       setSession(null);
       setCurrentUser(null);
       setUserCapabilities([]);
+      setIntendedDestination(null);
       showToast('You have been logged out successfully.', 'info');
       navigateTo('home');
     } catch (err) {
@@ -663,29 +716,68 @@ export function AppProvider({ children }) {
   // Equipment Listing (Mandatory real image validation, stored in Supabase)
   const listEquipment = async (itemData) => {
     if (!currentUser) {
+      showToast('Please log in to list equipment.', 'info');
+      setIntendedDestination({ modal: 'listEquipment' });
       navigateTo('login');
       return null;
     }
 
-    const images = Array.isArray(itemData.images) && itemData.images.length > 0
-      ? itemData.images
-      : (itemData.image ? [itemData.image] : []);
+    let uploadedImages = [];
+
+    // If actual File objects were provided, upload them to Supabase Storage
+    if (Array.isArray(itemData.fileObjects) && itemData.fileObjects.length > 0) {
+      try {
+        const uploadPromises = itemData.fileObjects.map(file =>
+          uploadEquipmentImage(file, currentUser.id)
+        );
+        uploadedImages = await Promise.all(uploadPromises);
+      } catch (uploadErr) {
+        showToast(uploadErr.message || 'Image upload failed. Please try again.', 'error');
+        return null;
+      }
+    } else if (Array.isArray(itemData.images) && itemData.images.length > 0) {
+      uploadedImages = itemData.images;
+    } else if (itemData.image) {
+      uploadedImages = [itemData.image];
+    }
 
     // Product Image Rule: Must have at least one uploaded photo
-    if (images.length === 0) {
+    if (uploadedImages.length === 0) {
       showToast('Please upload at least one photo of your equipment.', 'error');
       return null;
     }
 
     const newItem = {
       id: `eq-${Date.now()}`,
-      status: 'Approved', // ACTIVE in marketplace so the user sees their listing immediately
+      title: itemData.title,
+      name: itemData.title,
+      category: itemData.category,
+      brand: itemData.brand || '',
+      model: itemData.model || '',
+      description: itemData.description || '',
+      condition: itemData.condition || 'Good',
+      dailyRate: Number(itemData.dailyRate),
+      price_per_day: Number(itemData.dailyRate),
+      securityDeposit: Number(itemData.securityDeposit || 0),
+      security_deposit: Number(itemData.securityDeposit || 0),
+      location: itemData.location || itemData.pickupLocation || '',
+      city: itemData.city || 'Chennai',
+      deliveryAvailable: itemData.deliveryAvailable ?? true,
+      pickupAvailable: itemData.pickupAvailable ?? true,
+      specs: itemData.specs || {},
+      rentalRules: itemData.rentalRules || [],
+      rent_to_buy_enabled: Boolean(itemData.rentToBuyEnabled || itemData.rent_to_buy_enabled),
+      purchase_price: itemData.purchasePrice || itemData.purchase_price || null,
+      rent_to_buy_terms: itemData.rentToBuyTerms || itemData.rent_to_buy_terms || null,
+      student_discount_enabled: Boolean(itemData.studentDiscountEnabled || itemData.student_discount_enabled),
+      student_discount_percent: itemData.studentDiscountPercent || itemData.student_discount_percent || 10,
+      status: 'Approved', // Default active in marketplace
       rating: 0,
       reviewsCount: 0,
       isAvailable: true,
-      image: images[0],
-      image_url: images[0],
-      images: images,
+      image: uploadedImages[0],
+      image_url: uploadedImages[0],
+      images: uploadedImages,
       owner: {
         id: currentUser.id,
         name: currentUser.name,
@@ -695,37 +787,51 @@ export function AppProvider({ children }) {
         responseTime: '< 15 mins',
         completedRentals: 0,
         rating: 0
-      },
-      ...itemData
+      }
     };
-
-    setEquipment(prev => [newItem, ...prev]);
 
     // Save to Supabase
     if (isSupabaseConfigured) {
       try {
-        await supabase.from('equipment').insert([{
+        const { data: dbItem, error: insertError } = await supabase.from('equipment').insert([{
           owner_id: currentUser.id,
           name: newItem.title,
           category: newItem.category,
-          brand: newItem.brand || '',
-          model: newItem.model || '',
-          description: newItem.description || '',
-          condition: newItem.condition || 'Good',
-          price_per_day: Number(newItem.dailyRate),
-          security_deposit: Number(newItem.securityDeposit || 0),
-          location: newItem.location || newItem.pickupLocation || '',
-          city: newItem.city || 'Chennai',
+          brand: newItem.brand,
+          model: newItem.model,
+          description: newItem.description,
+          condition: newItem.condition,
+          price_per_day: newItem.dailyRate,
+          security_deposit: newItem.securityDeposit,
+          location: newItem.location,
+          city: newItem.city,
           images: newItem.images,
           status: 'APPROVED',
-          is_available: true
-        }]);
+          is_available: true,
+          rent_to_buy_enabled: newItem.rent_to_buy_enabled,
+          purchase_price: newItem.purchase_price,
+          rent_to_buy_terms: newItem.rent_to_buy_terms,
+          student_discount_enabled: newItem.student_discount_enabled,
+          student_discount_percent: newItem.student_discount_percent
+        }]).select().single();
+
+        if (insertError) {
+          throw insertError;
+        }
+
+        if (dbItem?.id) {
+          newItem.id = dbItem.id;
+        }
       } catch (err) {
         console.error('Supabase equipment insert error:', err);
+        showToast(err.message || 'Failed to save listing to database.', 'error');
+        return null;
       }
     } else {
       supabase.from('equipment').insert([newItem]);
     }
+
+    setEquipment(prev => [newItem, ...prev]);
 
     // Ensure user has EQUIPMENT_OWNER capability
     if (!userCapabilities.includes('EQUIPMENT_OWNER')) {
@@ -773,51 +879,126 @@ export function AppProvider({ children }) {
   // Technician Onboarding & Moderation
   const onboardTechnician = async (techData) => {
     if (!currentUser) {
+      showToast('Please log in before applying as a technician.', 'info');
+      setIntendedDestination({ modal: 'becomeTechnician' });
       navigateTo('login');
       return null;
     }
 
+    let avatarUrl = techData.avatar || currentUser.avatar || '';
+    if (techData.avatarFile) {
+      try {
+        avatarUrl = await uploadProfileAvatar(techData.avatarFile, currentUser.id);
+      } catch (err) {
+        console.warn('Avatar upload fallback:', err);
+      }
+    }
+
+    let portfolioUrls = techData.portfolio || [];
+    if (Array.isArray(techData.portfolioFiles) && techData.portfolioFiles.length > 0) {
+      try {
+        const uploadPromises = techData.portfolioFiles.map(file =>
+          uploadTechnicianPortfolio(file, currentUser.id)
+        );
+        portfolioUrls = await Promise.all(uploadPromises);
+      } catch (err) {
+        console.warn('Portfolio upload fallback:', err);
+      }
+    }
+
+    let verificationDocPath = '';
+    if (techData.verificationDocFile) {
+      try {
+        verificationDocPath = await uploadTechnicianVerificationDoc(techData.verificationDocFile, currentUser.id);
+      } catch (err) {
+        console.warn('Verification doc upload fallback:', err);
+      }
+    }
+
+    // Set initial status to Pending / PENDING for admin review
     const newTech = {
       id: `tech-${Date.now()}`,
       userId: currentUser.id,
       name: techData.name || currentUser.name,
-      avatar: techData.avatar || currentUser.avatar || '',
-      rating: 0,
+      avatar: avatarUrl,
+      title: techData.title || techData.specialization || 'Electronics Repair Specialist',
+      specialization: techData.specialization || techData.title || 'Electronics Repair Specialist',
+      rating: 5.0,
       reviewsCount: 0,
       jobsCompleted: 0,
-      status: 'Approved', // VERIFIED so it appears in the technician directory immediately
-      verification_status: 'VERIFIED',
+      status: 'Pending', // PENDING for admin verification
+      verification_status: 'PENDING',
+      yearsExperience: Number(techData.yearsExperience || 0),
+      baseRate: Number(techData.baseRate || 399),
+      serviceArea: techData.serviceArea || techData.city || 'Chennai',
+      city: techData.city || 'Chennai',
+      categories: Array.isArray(techData.categories) && techData.categories.length > 0 ? techData.categories : ['Electronics Repair'],
       verifiedBadges: {
-        identityVerified: true,
-        skillVerified: true,
-        experienceVerified: true
+        identityVerified: false,
+        skillVerified: false,
+        experienceVerified: false
       },
-      verificationDocMasked: `ID: Masked & Verified`,
+      verificationDocMasked: techData.idNumberMasked ? `${techData.idType || 'Govt ID'}: ${techData.idNumberMasked}` : (techData.verificationDocMasked || 'Govt ID Provided - Pending Review'),
+      verificationDocPath: verificationDocPath,
       reviews: [],
-      portfolio: techData.portfolio || [],
+      portfolio: portfolioUrls,
+      bio: techData.bio || `${techData.specialization || 'Technician'}. ${techData.yearsExperience || 0} years experience.`,
       ...techData
     };
 
-    setTechnicians(prev => [newTech, ...prev]);
-
     if (isSupabaseConfigured) {
       try {
-        await supabase.from('technicians').insert([{
+        const { data: techRow, error: techError } = await supabase.from('technicians').upsert([{
           user_id: currentUser.id,
           bio: newTech.bio || '',
           experience_years: Number(newTech.yearsExperience || 0),
           service_area: newTech.serviceArea || '',
           city: newTech.city || 'Chennai',
-          verification_status: 'VERIFIED',
-          rating: 0,
+          verification_status: 'PENDING',
+          rating: 5.0,
           completed_jobs: 0
-        }]);
+        }], { onConflict: 'user_id' }).select().single();
+
+        if (techError) {
+          throw techError;
+        }
+
+        if (techRow?.id) {
+          newTech.id = techRow.id;
+          // Insert verification document record
+          await supabase.from('technician_verifications').insert([{
+            technician_id: techRow.id,
+            verification_type: techData.idType || 'GOVT_ID',
+            status: 'PENDING',
+            document_path: verificationDocPath || 'secure_id',
+            document_masked_preview: newTech.verificationDocMasked
+          }]);
+
+          // Insert services
+          if (Array.isArray(newTech.categories)) {
+            const srvRows = newTech.categories.map(c => ({
+              technician_id: techRow.id,
+              service_name: c,
+              category: c,
+              price: newTech.baseRate || 399
+            }));
+            await supabase.from('technician_services').insert(srvRows);
+          }
+        }
       } catch (err) {
         console.error('Supabase technician insert error:', err);
+        showToast(err.message || 'Failed to submit technician application', 'error');
+        return null;
       }
     } else {
       supabase.from('technicians').insert([newTech]);
     }
+
+    // Update or add technician in state (avoid duplicates)
+    setTechnicians(prev => {
+      const filtered = prev.filter(t => t.userId !== currentUser.id && t.id !== newTech.id);
+      return [newTech, ...filtered];
+    });
 
     // Add TECHNICIAN capability
     if (!userCapabilities.includes('TECHNICIAN')) {
@@ -831,12 +1012,12 @@ export function AppProvider({ children }) {
     }
 
     addNotification({
-      title: 'Technician Profile Verified',
-      message: 'Your technician profile is now live in the RentiPair directory.',
+      title: 'Technician Application Submitted',
+      message: 'Your application has been received and is currently under admin verification.',
       type: 'verification'
     });
 
-    showToast('Technician profile created and verified!', 'success');
+    showToast('Application submitted! Our admin team will review your verification details.', 'success');
     return newTech;
   };
 
@@ -1410,7 +1591,10 @@ export function AppProvider({ children }) {
           return studentVerifications.some(v => v.userId === userId && v.status === 'VERIFIED') || (currentUser?.id === userId && Boolean(currentUser?.isStudentVerified));
         },
         // Referrals
-        referrals
+        referrals,
+        // Intended destination across auth redirects
+        intendedDestination,
+        setIntendedDestination
       }}
     >
       {children}

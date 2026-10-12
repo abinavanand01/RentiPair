@@ -16,13 +16,17 @@ import {
   Star,
   Image as ImageIcon,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 
 export default function ListEquipmentModal() {
-  const { modalState, closeModal, listEquipment, currentUser } = useApp();
+  const { modalState, closeModal, listEquipment, currentUser, navigateTo } = useApp();
   const [step, setStep] = useState(1); // 1: Basic Info, 2: Specs & Photos, 3: Pricing & Rules, 4: Preview & Submit, 5: Done
   const [errorMsg, setErrorMsg] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fileObjects, setFileObjects] = useState([]);
   const fileInputRef = useRef(null);
 
   // Form Fields - starts completely clean and empty
@@ -54,6 +58,7 @@ export default function ListEquipmentModal() {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setErrorMsg('');
+    setFieldErrors(prev => ({ ...prev, [name]: '' }));
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -65,7 +70,27 @@ export default function ListEquipmentModal() {
     if (files.length === 0) return;
 
     setErrorMsg('');
-    files.forEach(file => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
+    const maxBytes = 5 * 1024 * 1024; // 5 MB
+
+    const validNewFiles = [];
+    for (const file of files) {
+      if (!allowedTypes.includes(file.type.toLowerCase())) {
+        setErrorMsg(`"${file.name}" is not a supported format. Please upload JPG, PNG, WEBP, or AVIF.`);
+        continue;
+      }
+      if (file.size > maxBytes) {
+        setErrorMsg(`"${file.name}" exceeds the 5 MB maximum upload limit.`);
+        continue;
+      }
+      validNewFiles.push(file);
+    }
+
+    if (validNewFiles.length === 0) return;
+
+    setFileObjects(prev => [...prev, ...validNewFiles]);
+
+    validNewFiles.forEach(file => {
       const reader = new FileReader();
       reader.onload = (uploadEvent) => {
         const base64Url = uploadEvent.target.result;
@@ -85,11 +110,28 @@ export default function ListEquipmentModal() {
       ...prev,
       images: prev.images.filter((_, idx) => idx !== indexToRemove)
     }));
+    setFileObjects(prev => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
   const validateStep1 = () => {
+    const errors = {};
     if (!formData.title.trim()) {
-      setErrorMsg('Please enter an equipment title.');
+      errors.title = 'Please enter an equipment title.';
+    } else if (formData.title.trim().length < 3) {
+      errors.title = 'Title must be at least 3 characters long.';
+    }
+
+    if (!formData.category) {
+      errors.category = 'Please select a category.';
+    }
+
+    if (formData.description && formData.description.trim().length > 0 && formData.description.trim().length < 10) {
+      errors.description = 'Description should be at least 10 characters long.';
+    }
+
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setErrorMsg(Object.values(errors)[0]);
       return false;
     }
     setErrorMsg('');
@@ -97,8 +139,13 @@ export default function ListEquipmentModal() {
   };
 
   const validateStep2 = () => {
+    const errors = {};
     if (!formData.images || formData.images.length === 0) {
-      setErrorMsg('Please upload at least one photo of your equipment.');
+      errors.images = 'Please upload at least one photo of your equipment.';
+    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setErrorMsg(errors.images);
       return false;
     }
     setErrorMsg('');
@@ -106,20 +153,28 @@ export default function ListEquipmentModal() {
   };
 
   const validateStep3 = () => {
+    const errors = {};
     if (!formData.dailyRate || Number(formData.dailyRate) <= 0) {
-      setErrorMsg('Please specify a valid daily rental rate.');
-      return false;
+      errors.dailyRate = 'Please specify a valid daily rental rate greater than ₹0.';
+    }
+    if (formData.securityDeposit !== '' && Number(formData.securityDeposit) < 0) {
+      errors.securityDeposit = 'Security deposit cannot be negative.';
     }
     if (!formData.pickupLocation.trim()) {
-      setErrorMsg('Please enter a pickup locality or landmark.');
+      errors.pickupLocation = 'Please enter a pickup locality or landmark.';
+    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setErrorMsg(Object.values(errors)[0]);
       return false;
     }
     setErrorMsg('');
     return true;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (isSubmitting) return;
 
     if (!formData.images || formData.images.length === 0) {
       setErrorMsg('Please upload at least one photo of your equipment.');
@@ -141,31 +196,46 @@ export default function ListEquipmentModal() {
       ? formData.rentalRules.split('\n').filter(r => r.trim().length > 0)
       : [];
 
-    listEquipment({
-      title: formData.title,
-      category: formData.category,
-      brand: formData.brand,
-      model: formData.model,
-      description: formData.description,
-      condition: formData.condition,
-      dailyRate: Number(formData.dailyRate),
-      securityDeposit: Number(formData.securityDeposit || 0),
-      location: formData.pickupLocation,
-      city: formData.city,
-      deliveryAvailable: formData.deliveryAvailable,
-      pickupAvailable: formData.pickupAvailable,
-      specs: parsedSpecs,
-      rentalRules: parsedRules,
-      image: formData.images[0],
-      images: formData.images,
-      rent_to_buy_enabled: formData.rentToBuyEnabled,
-      purchase_price: formData.rentToBuyEnabled ? Number(formData.purchasePrice || 0) : null,
-      rent_to_buy_terms: formData.rentToBuyEnabled ? formData.rentToBuyTerms : null,
-      student_discount_enabled: formData.studentDiscountEnabled,
-      student_discount_percent: formData.studentDiscountEnabled ? Number(formData.studentDiscountPercent || 10) : 0
-    });
+    setIsSubmitting(true);
+    setErrorMsg('');
 
-    setStep(5);
+    try {
+      const result = await listEquipment({
+        title: formData.title,
+        category: formData.category,
+        brand: formData.brand,
+        model: formData.model,
+        description: formData.description,
+        condition: formData.condition,
+        dailyRate: Number(formData.dailyRate),
+        securityDeposit: Number(formData.securityDeposit || 0),
+        location: formData.pickupLocation,
+        city: formData.city,
+        deliveryAvailable: formData.deliveryAvailable,
+        pickupAvailable: formData.pickupAvailable,
+        specs: parsedSpecs,
+        rentalRules: parsedRules,
+        image: formData.images[0],
+        images: formData.images,
+        fileObjects: fileObjects,
+        rent_to_buy_enabled: formData.rentToBuyEnabled,
+        purchase_price: formData.rentToBuyEnabled ? Number(formData.purchasePrice || 0) : null,
+        rent_to_buy_terms: formData.rentToBuyEnabled ? formData.rentToBuyTerms : null,
+        student_discount_enabled: formData.studentDiscountEnabled,
+        student_discount_percent: formData.studentDiscountEnabled ? Number(formData.studentDiscountPercent || 10) : 0
+      });
+
+      setIsSubmitting(false);
+
+      if (result) {
+        setStep(5);
+      } else {
+        setErrorMsg('Failed to save listing. Please check required fields and try again.');
+      }
+    } catch (err) {
+      setIsSubmitting(false);
+      setErrorMsg(err.message || 'Error publishing listing. Please try again.');
+    }
   };
 
   const resetFormAndClose = () => {
@@ -191,6 +261,9 @@ export default function ListEquipmentModal() {
       studentDiscountEnabled: true,
       studentDiscountPercent: 10
     });
+    setFileObjects([]);
+    setFieldErrors({});
+    setIsSubmitting(false);
     setStep(1);
     setErrorMsg('');
     closeModal('listEquipment');
@@ -256,7 +329,13 @@ export default function ListEquipmentModal() {
                 onChange={handleChange}
                 placeholder="e.g. Casio fx-991CW Calculator or Sony A7 IV Camera"
                 required
+                style={{ borderColor: fieldErrors.title ? '#EF4444' : undefined }}
               />
+              {fieldErrors.title && (
+                <span style={{ color: '#F87171', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {fieldErrors.title}
+                </span>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
@@ -516,7 +595,13 @@ export default function ListEquipmentModal() {
                   placeholder="e.g. 50, 500, 1500"
                   min="1"
                   required
+                  style={{ borderColor: fieldErrors.dailyRate ? '#EF4444' : undefined }}
                 />
+                {fieldErrors.dailyRate && (
+                  <span style={{ color: '#F87171', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {fieldErrors.dailyRate}
+                  </span>
+                )}
               </div>
 
               <div className="form-group">
@@ -529,7 +614,13 @@ export default function ListEquipmentModal() {
                   onChange={handleChange}
                   placeholder="e.g. 200, 2000, 10000"
                   min="0"
+                  style={{ borderColor: fieldErrors.securityDeposit ? '#EF4444' : undefined }}
                 />
+                {fieldErrors.securityDeposit && (
+                  <span style={{ color: '#F87171', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {fieldErrors.securityDeposit}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -544,7 +635,13 @@ export default function ListEquipmentModal() {
                   onChange={handleChange}
                   placeholder="e.g. Adyar, T. Nagar, HSR Layout"
                   required
+                  style={{ borderColor: fieldErrors.pickupLocation ? '#EF4444' : undefined }}
                 />
+                {fieldErrors.pickupLocation && (
+                  <span style={{ color: '#F87171', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {fieldErrors.pickupLocation}
+                  </span>
+                )}
               </div>
 
               <div className="form-group">
@@ -739,12 +836,33 @@ export default function ListEquipmentModal() {
             </div>
 
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button type="button" onClick={() => setStep(3)} className="btn btn-outline" style={{ flex: 1 }}>
+              <button
+                type="button"
+                onClick={() => setStep(3)}
+                className="btn btn-outline"
+                style={{ flex: 1 }}
+                disabled={isSubmitting}
+              >
                 Edit Details
               </button>
-              <button type="button" onClick={handleSubmit} className="btn btn-primary" style={{ flex: 2 }}>
-                <CheckCircle size={16} />
-                <span>Publish Listing</span>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="btn btn-primary"
+                style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Publishing to Supabase...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={16} />
+                    <span>Publish Listing</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -776,13 +894,35 @@ export default function ListEquipmentModal() {
               Your item <strong>"{formData.title}"</strong> is now live in the RentiPair marketplace with your uploaded photos.
             </p>
 
-            <button
-              onClick={resetFormAndClose}
-              className="btn btn-primary"
-              style={{ minWidth: '160px' }}
-            >
-              Done
-            </button>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => {
+                  resetFormAndClose();
+                  navigateTo('dashboard', { tab: 'equipment' });
+                }}
+                className="btn btn-primary"
+                style={{ minWidth: '170px' }}
+              >
+                View in My Equipment
+              </button>
+              <button
+                onClick={() => {
+                  resetFormAndClose();
+                  navigateTo('rent');
+                }}
+                className="btn btn-outline"
+                style={{ minWidth: '170px' }}
+              >
+                Browse Marketplace
+              </button>
+              <button
+                onClick={resetFormAndClose}
+                className="btn btn-ghost"
+                style={{ minWidth: '100px', color: '#94A3B8' }}
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
       </div>

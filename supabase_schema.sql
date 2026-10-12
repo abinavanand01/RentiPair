@@ -444,3 +444,67 @@ CREATE POLICY "Users view only own notifications"
 
 CREATE POLICY "Users update only own notifications"
     ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
+
+-- =====================================================================
+-- 13. STORAGE BUCKETS SETUP & SECURITY (SUPABASE STORAGE)
+-- Creates the required storage buckets with public/private settings
+-- =====================================================================
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES
+    ('equipment-images', 'equipment-images', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']),
+    ('avatars', 'avatars', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp']),
+    ('technician-portfolios', 'technician-portfolios', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp']),
+    ('technician-verifications', 'technician-verifications', false, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'application/pdf']),
+    ('student-verifications', 'student-verifications', false, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
+ON CONFLICT (id) DO UPDATE SET
+    public = EXCLUDED.public,
+    file_size_limit = EXCLUDED.file_size_limit,
+    allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+-- Public Storage Read Access (equipment images, avatars, technician portfolios)
+CREATE POLICY "Public media viewable by everyone"
+    ON storage.objects FOR SELECT USING (
+        bucket_id IN ('equipment-images', 'avatars', 'technician-portfolios')
+    );
+
+-- Authenticated Users can upload to their own user-scoped directory in public buckets
+CREATE POLICY "Users can upload own public media"
+    ON storage.objects FOR INSERT WITH CHECK (
+        bucket_id IN ('equipment-images', 'avatars', 'technician-portfolios')
+        AND auth.role() = 'authenticated'
+        AND (storage.foldername(name))[1] = auth.uid()::text
+    );
+
+CREATE POLICY "Users can update and delete own public media"
+    ON storage.objects FOR DELETE USING (
+        bucket_id IN ('equipment-images', 'avatars', 'technician-portfolios')
+        AND (storage.foldername(name))[1] = auth.uid()::text
+    );
+
+-- Private Verification Documents Storage (technician-verifications, student-verifications)
+-- Strictly accessible only to the document owner or an authenticated admin
+CREATE POLICY "Private verification docs viewable only by owner or admin"
+    ON storage.objects FOR SELECT USING (
+        bucket_id IN ('technician-verifications', 'student-verifications')
+        AND (
+            (storage.foldername(name))[1] = auth.uid()::text
+            OR (SELECT is_admin FROM public.profiles WHERE id = auth.uid()) = true
+        )
+    );
+
+CREATE POLICY "Authenticated users can upload own verification documents"
+    ON storage.objects FOR INSERT WITH CHECK (
+        bucket_id IN ('technician-verifications', 'student-verifications')
+        AND auth.role() = 'authenticated'
+        AND (storage.foldername(name))[1] = auth.uid()::text
+    );
+
+CREATE POLICY "Users or admin can manage private verification documents"
+    ON storage.objects FOR DELETE USING (
+        bucket_id IN ('technician-verifications', 'student-verifications')
+        AND (
+            (storage.foldername(name))[1] = auth.uid()::text
+            OR (SELECT is_admin FROM public.profiles WHERE id = auth.uid()) = true
+        )
+    );
+

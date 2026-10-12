@@ -104,7 +104,7 @@ export default function RentMarketplace() {
   // Filter Logic (100% Real Database Items)
   const filteredItems = useMemo(() => {
     return equipment
-      .filter(item => item.status === 'Approved')
+      .filter(item => item.status === 'Approved' || item.status === 'APPROVED')
       .filter(item => {
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
@@ -660,7 +660,7 @@ export default function RentMarketplace() {
 
             {/* RESULTS GRID OR BEAUTIFUL EMPTY STATES */}
             {filteredItems.length === 0 ? (
-              equipment.filter(e => e.status === 'Approved').length === 0 ? (
+              equipment.filter(e => e.status === 'Approved' || e.status === 'APPROVED').length === 0 ? (
                 /* Empty Database State */
                 <div style={{
                   background: 'rgba(14, 19, 48, 0.7)',
@@ -676,7 +676,7 @@ export default function RentMarketplace() {
                 }}>
                   <div style={{ fontSize: '48px', marginBottom: '16px' }}>📦</div>
                   <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF', marginBottom: '8px' }}>
-                    No equipment has been listed yet.
+                    No equipment listed yet.
                   </h3>
                   <p style={{ fontSize: '14.5px', color: '#94A3B8', lineHeight: 1.5, marginBottom: '24px' }}>
                     Be the first person to list equipment on RentiPair. Share your gear and start earning rental income.

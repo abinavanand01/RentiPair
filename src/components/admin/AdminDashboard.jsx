@@ -348,7 +348,7 @@ export default function AdminDashboard() {
                             {item.category} • ₹{item.dailyRate}/day • Deposit: ₹{item.securityDeposit}
                           </div>
                           <div style={{ fontSize: '11.5px', color: '#64748B' }}>
-                            Owner: {item.owner.name} (Adyar, Chennai)
+                            Owner: {item.owner?.name || 'Verified Owner'} ({item.city || 'Chennai'})
                           </div>
                         </div>
                       </div>

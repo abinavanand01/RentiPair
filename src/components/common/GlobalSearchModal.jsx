@@ -49,7 +49,7 @@ export default function GlobalSearchModal() {
   const q = query.toLowerCase().trim();
 
   const filteredEquipment = equipment.filter(item =>
-    item.status === 'Approved' && (
+    (item.status === 'Approved' || item.status === 'APPROVED') && (
       !q ||
       item.title?.toLowerCase().includes(q) ||
       item.category?.toLowerCase().includes(q) ||
@@ -59,7 +59,7 @@ export default function GlobalSearchModal() {
   ).slice(0, 5);
 
   const filteredTechnicians = technicians.filter(tech =>
-    tech.status === 'Approved' && (
+    (tech.status === 'Approved' || tech.verification_status === 'VERIFIED') && (
       !q ||
       tech.name?.toLowerCase().includes(q) ||
       tech.title?.toLowerCase().includes(q) ||

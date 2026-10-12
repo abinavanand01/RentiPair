@@ -14,7 +14,7 @@ import {
 export default function VerifiedTechnicians() {
   const { technicians, openModal, navigateTo } = useApp();
 
-  const approvedTechs = technicians.filter(t => t.status === 'Approved').slice(0, 4);
+  const approvedTechs = technicians.filter(t => t.status === 'Approved' || t.verification_status === 'VERIFIED').slice(0, 4);
 
   return (
     <section style={{
